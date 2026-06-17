@@ -12,11 +12,179 @@ datasource db {
   provider = "mysql"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  firstName String   @map("first_name") @db.VarChar(255)
-  lastName  String   @map("last_name") @db.VarChar(255)
-  email     String   @unique @db.VarChar(255)
-  password  String   @db.VarChar(255)
+// ─── ENUMS ─────────────────────────────────────────────────────
+
+enum UserRole {
+  CREATOR
+  ADMIN
+  CLIENT
+}
+
+enum ServerType {
+  CLOUD
+  LOCAL
+}
+
+enum RuleType {
+  IP_BLACKLIST
+  IP_WHITELIST
+  COUNTRY_BLACKLIST
+  COUNTRY_WHITELIST
+  CONTINENT_BLACKLIST
+  RATE_LIMIT
+  USER_AGENT_BLOCK
+  PATH_BLOCK
+  TOR_BLOCK
+  REPUTATION_BLOCK
+}
+
+enum ActionType {
+  DENY
+  ALLOW
+  CHALLENGE
+  LOG
+  REDIRECT
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────
+
+// ─── Team ──────────────────────────────────────────────────────────────────
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique // ex: "techcorp"
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  users         User[]
+  servers       Server[]
+  gatewayTokens GatewayToken[]
+}
+
+// ─── User ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(CLIENT)
+  teamId       String   @map("team_id")
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime @updatedAt @map("deleted_at")
+
+  gatewayTokens GatewayToken[]
+  session       Session?
+  otps          Otp[]
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────────
+
+model Session {
+  id     String @id @default(uuid()) @db.VarChar(36)
+  userId String @unique @map("user_id") @db.VarChar(36)
+
+  accessToken  String   @map("access_token") @db.Text // JWT = taille variable
+  refreshToken String   @map("refresh_token") @db.VarChar(50)
+  tokenType    String   @default("bearer") @map("token_type") @db.VarChar(20)
+  expiresIn    Int      @default(3600) @map("expires_in") // secondes
+  expiresAt    DateTime @map("expires_at")
+
+  loggedOut Boolean @default(false) @map("logged_out")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── OTP ──────────────────────────────────────────────────────────────────────
+
+model Otp {
+  id        Int      @id @default(autoincrement())
+  code      String   @db.VarChar(6)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  userId    String?  @map("user_id") @db.VarChar(36) // aligné sur UUID
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model GatewayToken {
+  id        String   @id @default(uuid())
+  name      String
+  value     String   @unique
+  scope     String   @default("*")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId    String   @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+}
+
+// ─── CONFIG ────────────────────────────────────────────────────
+
+model Server {
+  id         String     @id @default(uuid())
+  name       String
+  identifier String     @unique
+  url        String
+  type       ServerType @default(CLOUD)
+  teamId     String     @map("team_id")
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  requireToken Boolean @default(false) @map("require_token")
+
+  accessPolicy Json @default("{\"mode\":\"include\",\"userIds\":[\"*\"]}") @map("access_policy")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  rules         Rule[]
+  tunnelSession TunnelSession?
+}
+
+model Rule {
+  id        String     @id @default(uuid())
+  serverId  String     @map("server_id")
+  server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  type      RuleType
+  condition Json
+  action    ActionType
+  priority  Int        @default(0) // Plus haut = évalué en premier
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updatedAt")
+}
+
+// ─── TUNNEL ────────────────────────────────────────────────────
+
+model TunnelSession {
+  id          String   @id @default(uuid())
+  serverId    String   @unique @map("server_id")
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  connectedAt DateTime @default(now()) @map("connected_at")
+  lastPingAt  DateTime @default(now()) @map("lastPing_at")
+  isActive    Boolean  @default(true) @map("is_active")
+}
+
+// ─── LOGS ──────────────────────────────────────────────────────
+
+model RequestLog {
+  id             String   @id @default(uuid())
+  serverId       String
+  timestamp      DateTime @default(now())
+  clientIp       String
+  method         String
+  path           String
+  statusCode     Int
+  latencyMs      Int
+  gatewayTokenId String?
+  via            String   @default("cloud") // "cloud" | "tunnel"
+
+  @@index([serverId, timestamp])
 }
