@@ -1,35 +1,29 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Request,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TeamService } from './team.service';
-import type { RequestAuth } from '../types/auth.type';
+import { RegisterTeamDto } from './dto/register-team.dto';
+import { DeleteTeamDto } from './dto/delete-team.dto';
+import { TEAM_PATTERNS } from './team.constants';
 
-@ApiTags('Teams')
-@ApiBearerAuth('access-token')
-@Controller('teams')
+@Controller()
 export class TeamController {
-  constructor(private teamService: TeamService) {}
+  constructor(private readonly teamService: TeamService) {}
 
   /**
-   * =========================
-   * 🔐 ROUTE ALL TEAMS
-   * =========================
-   * GET /teams/all
-   * Route pour avoir les informations sur les équipes.
+   * POST /auth/team/register
+   * Crée une Team + un compte CREATOR.
    */
-  @HttpCode(HttpStatus.OK)
-  @Get('all')
-  @ApiOperation({ summary: 'Liste de toutes les équipes' })
-  GetAllWallets(@Request() req: RequestAuth) {
-    const user = req['user'];
-    return this.teamService.getAllTeams();
+  @MessagePattern(TEAM_PATTERNS.TEAM_REGISTER)
+  registerMessage(@Payload() dto: RegisterTeamDto) {
+    return this.teamService.registerTeam(dto);
+  }
+
+  /**
+   * DELETE /auth/team
+   * Supprime la Team du requester (+ cascade). Réservé au CREATOR.
+   */
+  @MessagePattern(TEAM_PATTERNS.TEAM_DELETE)
+  deleteMessage(@Payload() dto: DeleteTeamDto) {
+    return this.teamService.deleteTeam(dto);
   }
 }

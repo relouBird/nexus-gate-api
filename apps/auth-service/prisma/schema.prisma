@@ -20,6 +20,11 @@ enum UserRole {
   CLIENT
 }
 
+enum UserStatus {
+  AUTHENTICATED
+  UNAUTHENTICATED
+}
+
 enum ServerType {
   CLOUD
   LOCAL
@@ -65,16 +70,17 @@ model Team {
 // ─── User ──────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String     @id @default(uuid())
+  email        String     @unique
   username     String
-  passwordHash String   @map("password_hash")
-  role         UserRole @default(CLIENT)
-  teamId       String   @map("team_id")
-  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  deletedAt    DateTime @updatedAt @map("deleted_at")
+  passwordHash String     @map("password_hash")
+  role         UserRole   @default(CLIENT)
+  status       UserStatus @default(UNAUTHENTICATED)
+  teamId       String     @map("team_id")
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime   @updatedAt @map("deleted_at")
 
   gatewayTokens GatewayToken[]
   session       Session?

@@ -10,6 +10,8 @@ import { GatewayTokenModule } from './gateway-token/gateway-token.module';
 import { PrismaService } from './prisma/prisma.service';
 import { TeamModule } from './team/team.module';
 import { UsersModule } from './users/users.module';
+import { OtpModule } from './otp/otp.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -28,6 +30,9 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     GatewayTokenModule,
     TeamModule,
+    // Module utilitaire
+    OtpModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

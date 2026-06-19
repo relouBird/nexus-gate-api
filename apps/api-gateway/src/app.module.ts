@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from './app.constant';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       ],
       isGlobal: true,
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

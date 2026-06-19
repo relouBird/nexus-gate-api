@@ -1,4 +1,4 @@
-import { AUTH_PATTERNS } from './app.constants';
+import { FINAL_PATTERNS } from './app.constants';
 
 const colors = {
   green: '\x1b[32m',
@@ -19,10 +19,10 @@ export function printRpcPatterns() {
     `\x1b[32m[Nest]\x1b[0m \x1b[32m${pid}\x1b[0m  - ${date}     \x1b[32mLOG   \x1b[0m ${colors.yellow}[${label}]${colors.reset} RPC Patterns initialized`,
   );
 
-  Object.entries(AUTH_PATTERNS).forEach(([key, value]) => {
+  Object.entries(FINAL_PATTERNS).forEach(([key, value]) => {
     console.log(
       `\x1b[32m[Nest]\x1b[0m \x1b[32m${pid}\x1b[0m  - ${date}     \x1b[36mMAPPED\x1b[0m ${colors.yellow}[${label}]${colors.reset} ${colors.cyan}${key.padEnd(
-        10,
+        24,
       )}${colors.reset} - ${value}`,
     );
   });
