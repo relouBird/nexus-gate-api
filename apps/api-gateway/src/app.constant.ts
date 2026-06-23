@@ -1,5 +1,6 @@
 export const MICROSERVICES_CLIENTS = {
   AUTH_SERVICE: 'AUTH-SERVICE',
+  USER_SERVICE: 'USER-SERVICE',
   NETWORK_SERVICE: 'NETWORK-SERVICE',
 };
 
@@ -21,10 +22,4 @@ export const AUTH_PATTERNS = {
 
   TEAM_REGISTER: 'team.register',
   TEAM_DELETE: 'team.delete',
-
-  USERS_CREATE: 'users.create',
-  USERS_DELETE: 'users.delete',
-  USERS_FIND_ALL: 'users.findAll',
-  USERS_FIND_ONE: 'users.findOne',
-  USERS_UPDATE: 'users.update',
 } as const;

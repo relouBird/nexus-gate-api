@@ -29,6 +29,17 @@ import { TeamModule } from './team/team.module';
           }),
           inject: [ConfigService],
         },
+        {
+          imports: [ConfigModule],
+          name: MICROSERVICES_CLIENTS.USER_SERVICE,
+          useFactory: (config: ConfigService) => ({
+            transport: Transport.TCP,
+            options: {
+              port: Number(config.get('USER_SERVICE_PORT')) ?? 9004,
+            },
+          }),
+          inject: [ConfigService],
+        },
       ],
       isGlobal: true,
     }),
