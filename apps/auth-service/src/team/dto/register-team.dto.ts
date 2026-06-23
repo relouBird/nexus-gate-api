@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
 
 /**
  * Crée une Team + son compte CREATOR en une seule opération.
@@ -14,11 +21,22 @@ export class RegisterTeamDto {
   @IsEmail()
   email!: string;
 
+  @IsNotEmpty()
   @IsString()
   @MinLength(8)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message:
+      'Le mot de passe doit au minimum une Majuscule, une Minuscule, un  Nombre, and un Caractère Special',
+  })
   password!: string;
 
+  @IsNotEmpty()
   @IsString()
   @MinLength(8)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message:
+      'Le mot de passe doit au minimum une Majuscule, une Minuscule, un  Nombre, and un Caractère Special',
+  })
+  @ValidateIf((o, value) => value !== o.password)
   confirmPassword!: string;
 }

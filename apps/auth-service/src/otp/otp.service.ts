@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Otp, Prisma } from '../generated/prisma-client';
+import { Otp, Prisma, User } from '../generated/prisma-client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RpcException } from '@nestjs/microservices';
 import * as crypto from 'crypto';
 
 const DEFAULT_OTP_TTL_SECONDS = 300;
+
+export type ActionInGeneration = (data: User) => Promise<string>;
 
 @Injectable()
 export class OtpService {
@@ -30,7 +32,7 @@ export class OtpService {
     });
   }
 
-  async generateAndSendOtp(email: string): Promise<any> {
+  async generateAndSendOtp(email: string, action: ActionInGeneration) {
     try {
       this.logger.log(`Message received on OtpService => Send (${email})`);
 
@@ -48,7 +50,7 @@ export class OtpService {
         data: { used: true },
       });
 
-      const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+      const code = await action(user);
 
       await this.prisma.otp.create({
         data: {

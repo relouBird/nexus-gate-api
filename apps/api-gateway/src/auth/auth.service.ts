@@ -1,7 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { AUTH_PATTERNS, MICROSERVICES_CLIENTS } from '../app.constant';
-import { DispatchInteface, sendToAuthService } from '../app.helper';
+import {
+  DispatchInteface,
+  objectToString,
+  sendToAuthService,
+} from '../app.helper';
 
 @Injectable()
 export class AuthService {
@@ -16,10 +20,6 @@ export class AuthService {
    * Connexion d'un utilisateur.
    */
   async signIn(payload: any): Promise<any> {
-    this.logger.log(
-      `[Gateway] Forwarding login request for: ${payload?.email}`,
-    );
-
     return this.dispatch({ pattern: AUTH_PATTERNS.LOGIN, payload });
   }
 
@@ -27,15 +27,13 @@ export class AuthService {
    * Déconnexion d'un utilisateur.
    */
   async logout(payload: any, requester?: any): Promise<any> {
-    this.logger.log(`[Gateway] Forwarding Logout request for: ${payload}`);
-
     return this.dispatch({ pattern: AUTH_PATTERNS.LOGOUT, payload, requester });
   }
 
-  async sendOtp(email: string) {
+  async sendOtp(dto: string) {
     return this.dispatch({
       pattern: AUTH_PATTERNS.SEND_OTP,
-      payload: { email },
+      payload: dto,
     });
   }
 
@@ -55,23 +53,24 @@ export class AuthService {
    * Vérification de l'état du service d'authentification.
    */
   async getHello(): Promise<any> {
-    this.logger.log('[Gateway] Forwarding hello request to auth service');
-
     return this.dispatch({ pattern: AUTH_PATTERNS.HELLO });
   }
 
   // Ceci est ce qui doit etre mit dans tous les services
   private async dispatch(interfacePayload: DispatchInteface) {
-    let payload = {};
+    let payload: any = {};
     let pattern = interfacePayload.pattern;
 
     if (interfacePayload.payload) {
-      payload = { ...payload };
+      payload = { ...payload, ...interfacePayload.payload };
     }
 
     if (interfacePayload.requester) {
-      payload = { ...payload, requester: interfacePayload.requester };
+      const { iat, exp, ...requester } = interfacePayload.requester;
+      payload = { ...payload, requester };
     }
+
+    console.log('PAYLOAD ===>', objectToString(payload));
 
     return sendToAuthService(
       this.authServiceClient,

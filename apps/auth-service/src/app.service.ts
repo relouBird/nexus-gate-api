@@ -14,6 +14,7 @@ import { UserStatus } from './generated/prisma-client';
 import { OtpService } from './otp/otp.service';
 import { AuthContext } from './common/interfaces/auth-context.interface';
 import { RedisService } from './redis/redis.service';
+import { NotificationsService } from './mail/notifications/notifications.service';
 
 // Durée de session par défaut — même valeur que dans TeamService.registerTeam
 // (à terme : factoriser dans une config partagée, ex: ConfigService)
@@ -26,6 +27,7 @@ export class AppService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly otpService: OtpService,
+    private readonly notificationService: NotificationsService,
     private readonly jwt: JwtService,
     private readonly redis: RedisService,
   ) {}
@@ -60,7 +62,7 @@ export class AppService {
 
       if (user.status == UserStatus.UNAUTHENTICATED) {
         throw new RpcException({
-          statusCode: 406,
+          statusCode: 401,
           message: 'Veillez verifier votre email.',
         });
       }
@@ -69,7 +71,7 @@ export class AppService {
 
       const payload: AuthContext = {
         sub: user.id,
-        teamId: user.teamId,
+        teamId: user.teamId ?? '',
         role: user.role,
         expiredAt: new Date(Date.now() + DEFAULT_SESSION_TTL_SECONDS * 1000),
         jti,
@@ -107,7 +109,7 @@ export class AppService {
 
       const team = await this.prisma.team.findUnique({
         where: {
-          id: user.teamId,
+          id: user.teamId ?? '',
         },
       });
 
@@ -178,11 +180,45 @@ export class AppService {
   }
 
   async sendOtp(dto: SendOtpDto): Promise<any> {
-    return this.otpService.generateAndSendOtp(dto.email);
+    const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+    const data = await this.otpService.generateAndSendOtp(
+      dto.email,
+      async (user) => {
+        this.notificationService.send({
+          type: 'OTP',
+          email: user.email,
+          payload: {
+            otp: code,
+            purpose: dto.action,
+            userName: user.username,
+          },
+        });
+        return code;
+      },
+    );
+
+    return data;
   }
 
   async sendPasswordResetOtp(dto: SendPasswordResetOtpDto): Promise<any> {
-    return this.otpService.generateAndSendOtp(dto.email);
+    const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+    const data = await this.otpService.generateAndSendOtp(
+      dto.email,
+      async (user) => {
+        this.notificationService.send({
+          type: 'OTP',
+          email: user.email,
+          payload: {
+            otp: code,
+            purpose: 'reset',
+            userName: user.username,
+          },
+        });
+        return code;
+      },
+    );
+
+    return data;
   }
 
   async verifyOtp(dto: VerifyOtpDto): Promise<any> {
@@ -283,6 +319,15 @@ export class AppService {
       });
 
       await this.redis.del(`session:${user.id}`);
+
+      this.notificationService.send({
+        type: 'PASSWORD_CHANGED',
+        email: user.email,
+        payload: {
+          userName: user.username,
+          changeDate: new Date().toDateString(),
+        },
+      });
 
       return { success: true };
     } catch (error: any) {

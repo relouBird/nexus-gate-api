@@ -7,8 +7,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
 
 @Injectable()
-export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
+export class UserService {
+  private readonly logger = new Logger(UserService.name);
 
   // Injection du PrismaService via le constructeur
   constructor(private prisma: PrismaService) {}

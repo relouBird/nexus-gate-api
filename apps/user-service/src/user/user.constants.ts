@@ -1,4 +1,4 @@
-export const USERS_PATTERNS = {
+export const USER_PATTERNS = {
   USERS_CREATE: 'users.create',
   USERS_DELETE: 'users.delete',
   // Bonus — pas dans la doc d'origine mais quasi systématiquement nécessaires

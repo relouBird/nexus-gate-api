@@ -9,9 +9,9 @@ import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { GatewayTokenModule } from './gateway-token/gateway-token.module';
 import { PrismaService } from './prisma/prisma.service';
 import { TeamModule } from './team/team.module';
-import { UsersModule } from './users/users.module';
 import { OtpModule } from './otp/otp.module';
 import { RedisModule } from './redis/redis.module';
+import { NotificationsModule } from './mail/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -27,12 +27,12 @@ import { RedisModule } from './redis/redis.module';
       signOptions: { expiresIn: '1d' }, // '60s', '15m','1h', '7d', etc.
     }),
     // Les modules métiers...
-    UsersModule,
     GatewayTokenModule,
     TeamModule,
     // Module utilitaire
     OtpModule,
     RedisModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

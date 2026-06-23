@@ -74,3 +74,20 @@ export async function sendToAuthService(
     handleServiceError(error, logger);
   }
 }
+
+/**
+ * Convertir un objet en chaine de caractère
+ */
+export function objectToString(obj: Record<string, any>): string {
+  if (typeof obj == 'object') {
+    return (
+      '{' +
+      Object.entries(obj)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ') +
+      '}'
+    );
+  }
+
+  return 'Not a Object';
+}

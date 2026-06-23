@@ -10,6 +10,7 @@ import {
 import { AuthService } from './auth.service';
 import { BadRequestException } from '@nestjs/common';
 import type { AuthRequest } from '../common/interfaces/auth-context.interface';
+import { Public } from './auth.public';
 
 // Déclaration du contrôleur avec le préfixe global "auth"
 // Toutes les routes commenceront par /auth
@@ -31,7 +32,7 @@ export class AuthController {
    * Route publique (pas besoin de token)
    */
   @HttpCode(HttpStatus.OK)
-  @Get('')
+  @Get('check')
   getStatement() {
     return this.authService.getHello();
   }
@@ -43,6 +44,7 @@ export class AuthController {
    * POST /auth/login
    * Route publique (pas besoin de token)
    */
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   signIn(@Body() signInDto: any) {
@@ -71,11 +73,12 @@ export class AuthController {
    * POST /auth/send-otp
    * Envoi d'un code OTP à l'utilisateur
    */
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @Post('send-otp')
   postSendOtp(@Body() sendOtpDto: any) {
     this.validateRequestBody(sendOtpDto);
-    return this.authService.sendOtp(sendOtpDto.email);
+    return this.authService.sendOtp(sendOtpDto);
   }
 
   /**
@@ -85,6 +88,7 @@ export class AuthController {
    * POST /auth/verify-otp
    * Permet de vérifier le code OTP envoyé à l'utilisateur
    */
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('verify-otp')
   postVerifyOtp(@Body() verifyOtpDto: any) {
@@ -100,6 +104,7 @@ export class AuthController {
    * Permet de réinitialiser le mot de passe de l'utilisateur
    * (Dans notre concept, recreer un nouveau mot de passe)
    */
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('reset-password')
   resetPassword(
@@ -117,6 +122,7 @@ export class AuthController {
    * POST /auth/change-password
    * Permet de changer le mot de passe de l'utilisateur connecté
    */
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('change-password')
   changePassword(

@@ -8,6 +8,7 @@ import { RegisterTeamDto } from './dto/register-team.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
 import { OtpService } from '../otp/otp.service';
 import { AuthContext } from '../common/interfaces/auth-context.interface';
+import { NotificationsService } from '../mail/notifications/notifications.service';
 
 // Durée de session par défaut — à aligner sur JWT_EXPIRES_IN (doc : 7d)
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24;
@@ -20,6 +21,7 @@ export class TeamService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly otpService: OtpService,
+    private readonly notificationService: NotificationsService,
   ) {}
 
   /**
@@ -44,7 +46,7 @@ export class TeamService {
         });
       }
 
-      if (existingUser) {
+      if (existingUser && !existingUser.deletedAt) {
         throw new RpcException({
           statusCode: 409,
           message: 'Un utilisateur avec cet email existe déjà',
@@ -59,8 +61,25 @@ export class TeamService {
           data: { name: teamName, slug },
         });
 
-        const user = await tx.user.create({
-          data: {
+        await tx.session.deleteMany({
+          where: {
+            user: {
+              email,
+            },
+          },
+        });
+
+        const user = await tx.user.upsert({
+          where: { email: dto.email },
+          update: {
+            username,
+            email,
+            passwordHash: hashedPassword,
+            role: 'CREATOR',
+            team: { connect: { id: team.id } },
+            deletedAt: null,
+          },
+          create: {
             username,
             email,
             passwordHash: hashedPassword,
@@ -84,6 +103,7 @@ export class TeamService {
 
       const accessToken = await this.jwt.signAsync(payload);
       const refreshToken = crypto.randomBytes(32).toString('hex');
+      const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
 
       await this.prisma.session.create({
         data: {
@@ -95,7 +115,27 @@ export class TeamService {
         },
       });
 
-      await this.otpService.generateAndSendOtp(user.email);
+      await this.otpService.generateAndSendOtp(user.email, async (user) => {
+        await this.notificationService.send({
+          type: 'OTP',
+          email: user.email,
+          payload: {
+            userName: user.username,
+            purpose: 'login',
+            otp: code,
+          },
+        });
+        await this.notificationService.send({
+          type: 'WELCOME_TEAM',
+          email: user.email,
+          payload: {
+            userName: user.username,
+            teamName: team.name,
+            teamSlug: team.slug,
+          },
+        });
+        return code;
+      });
 
       return {
         team,
@@ -153,6 +193,7 @@ export class TeamService {
         },
         data: {
           deletedAt: new Date(),
+          teamId: null,
         },
       });
 

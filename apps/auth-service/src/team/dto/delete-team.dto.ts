@@ -1,4 +1,6 @@
-import { AuthContext } from '../../common/interfaces/auth-context.interface';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { AuthContextDto } from '../../common/interfaces/auth-context.dto';
 
 /**
  * Supprime la Team du requester (+ cascade Users / GatewayTokens / Servers).
@@ -6,5 +8,8 @@ import { AuthContext } from '../../common/interfaces/auth-context.interface';
  * du requester, jamais une Team arbitraire.
  */
 export class DeleteTeamDto {
-  requester!: AuthContext;
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AuthContextDto)
+  requester!: AuthContextDto;
 }
