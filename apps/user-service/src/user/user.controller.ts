@@ -16,6 +16,12 @@ export class UsersController {
     return this.usersService.createUserInTeam(dto);
   }
 
+  /** Bonus — GET /auth/users : liste des Users de la Team du requester. */
+  @MessagePattern(USER_PATTERNS.USERS_FIND_ALL)
+  updateUserMessage(@Payload() dto: { requester: AuthContext }) {
+    return this.usersService.findUsersByTeam(dto.requester.teamId);
+  }
+
   /** DELETE /auth/users/:id — Supprime un User (CREATOR uniquement). */
   @MessagePattern(USER_PATTERNS.USERS_DELETE)
   deleteMessage(@Payload() dto: DeleteUserDto) {
