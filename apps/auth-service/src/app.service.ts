@@ -116,10 +116,9 @@ export class AppService {
       return {
         team,
         user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
+          ...user,
+          passwordHash: undefined,
+          deletedAt: undefined,
         },
         status: user.status.toLocaleLowerCase(),
         accessToken,

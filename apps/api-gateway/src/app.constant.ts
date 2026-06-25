@@ -23,3 +23,19 @@ export const AUTH_PATTERNS = {
   TEAM_REGISTER: 'team.register',
   TEAM_DELETE: 'team.delete',
 } as const;
+
+export const USER_PATTERNS = {
+  // Gérer les utilisateurs
+  USERS_CREATE: 'users.create',
+  USERS_DELETE: 'users.delete',
+  USERS_FIND_ALL: 'users.findAll',
+  USERS_FIND_ONE: 'users.findOne',
+  USERS_UPDATE: 'users.update',
+
+  // Pour l'utilisateur
+  ME_GET: 'me.get',
+  ME_CHANGE_PASSWORD: 'me.change.password',
+  ME_CHANGE_USERNAME: 'me.change.username',
+  ME_DELETE_ACCOUNT: 'me.delete.account',
+  ME_HELLO: 'me.hello',
+} as const;

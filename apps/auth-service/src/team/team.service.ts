@@ -9,6 +9,7 @@ import { DeleteTeamDto } from './dto/delete-team.dto';
 import { OtpService } from '../otp/otp.service';
 import { AuthContext } from '../common/interfaces/auth-context.interface';
 import { NotificationsService } from '../mail/notifications/notifications.service';
+import { UpdateTeamDto } from './dto/update-team.dto';
 
 // Durée de session par défaut — à aligner sur JWT_EXPIRES_IN (doc : 7d)
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24;
@@ -163,6 +164,61 @@ export class TeamService {
       throw new RpcException({
         statusCode: 500,
         message: 'Une erreur est survenue lors de la création de la team',
+      });
+    }
+  }
+
+  /**
+   * Mettre à jour la Team du requester (+ cascade). Réservé au CREATOR.
+   */
+  async updateTeam(dto: UpdateTeamDto): Promise<any> {
+    try {
+      const { name, slug, requester } = dto;
+
+      this.logger.log(
+        `Message received on TeamService => Delete (${requester.teamId})`,
+      );
+
+      if (requester.role !== 'CREATOR') {
+        throw new RpcException({
+          statusCode: 403,
+          message: 'Seul le créateur de la team peut la mettre à jour',
+        });
+      }
+
+      const existing = await this.prisma.team.findUnique({
+        where: {
+          slug,
+        },
+      });
+
+      if (existing && existing.id != requester.teamId) {
+        throw new RpcException({
+          statusCode: 403,
+          message:
+            'Votre slug est déjà utilisé par un autre organisme. Veuillez en utiliser un autre',
+        });
+      }
+
+      const team = await this.prisma.team.update({
+        where: { id: requester.teamId },
+        data: {
+          name,
+          slug,
+        },
+      });
+
+      return { team, success: true };
+    } catch (error: any) {
+      if (error instanceof RpcException) {
+        throw error;
+      }
+
+      this.logger.error(`Team deletion failed: ${error.message}`, error.stack);
+
+      throw new RpcException({
+        statusCode: 500,
+        message: 'Une erreur est survenue lors de la suppression de la team',
       });
     }
   }

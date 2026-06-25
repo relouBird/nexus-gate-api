@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -26,6 +27,9 @@ import { NotificationsModule } from './mail/notifications/notifications.module';
     // Les modules métiers...
     UserModule,
     NotificationsModule,
+
+    // Les utilitaires
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

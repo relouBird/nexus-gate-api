@@ -1,17 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
-import { Prisma, User, UserRole } from '../generated/prisma-client';
+import {
+  Prisma,
+  Team,
+  User,
+  UserRole,
+  UserStatus,
+} from '../generated/prisma-client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
+import { AuthContextDto } from '../common/interfaces/auth-context.dto';
+import { GetUsersDto } from './dto/get-users.dto';
+import { GetUserDto } from './dto/get-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { NotificationsService } from '../mail/notifications/notifications.service';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
   // Injection du PrismaService via le constructeur
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationsService,
+  ) {}
 
   // ──────────────────────────────────────────────────────────────
   // Méthodes génériques existantes (inchangées)
@@ -96,24 +110,29 @@ export class UserService {
   }
 
   // ──────────────────────────────────────────────────────────────
-  // Méthodes spécifiques ajoutées pour /auth/users (message patterns)
+  // Méthodes spécifiques ajoutées pour /users (message patterns)
   // ──────────────────────────────────────────────────────────────
 
   /**
    * POST /auth/users — Crée un User dans la Team du requester.
    * Réservé au CREATOR. Le rôle CREATOR ne peut pas être attribué ici.
    */
-  async createUserInTeam(
-    dto: CreateUserDto,
-  ): Promise<Omit<User, 'passwordHash'>> {
+  async createUserInTeam(dto: CreateUserDto): Promise<{
+    user: Omit<User, 'passwordHash'>;
+    message: string;
+  }> {
     try {
-      const { username, email, password, role, requester } = dto;
+      const { username, email, password, accessPolicy, role, requester } = dto;
+
+      this.logger.log(`Message received USERS-CREATE: (${requester.sub})`);
 
       this.logger.log(
         `Message received on UsersService => CreateInTeam (${email})`,
       );
 
-      if (requester.role === UserRole.CLIENT) {
+      const userCreator = await this.checkUser(requester);
+
+      if (userCreator.role === UserRole.CLIENT) {
         throw new RpcException({
           statusCode: 403,
           message:
@@ -126,6 +145,13 @@ export class UserService {
           statusCode: 400,
           message:
             'Le rôle CREATOR ne peut pas être attribué via cette méthode',
+        });
+      }
+
+      if (role === UserRole.ADMIN && userCreator.role == UserRole.ADMIN) {
+        throw new RpcException({
+          statusCode: 400,
+          message: 'Un Admin ne peut pas créer un autre admin',
         });
       }
 
@@ -144,11 +170,15 @@ export class UserService {
         email,
         passwordHash: hashedPassword,
         role: role ?? UserRole.CLIENT,
+        accessPolicy: { ...accessPolicy },
         team: { connect: { id: requester.teamId } },
       });
 
       const { passwordHash: _omit, ...safeUser } = user;
-      return safeUser;
+      return {
+        user: safeUser,
+        message: "L'utilisateur a été crée avec succès.",
+      };
     } catch (error: any) {
       if (error instanceof RpcException) {
         throw error;
@@ -164,20 +194,212 @@ export class UserService {
   }
 
   /**
+   * Bonus — GET /auth/users : liste les Users actifs de la Team du requester.
+   */
+  async findUsersByTeam(dto: GetUsersDto): Promise<{
+    users: Omit<User, 'passwordHash'>[];
+    team: Team;
+    total: number;
+    page: number;
+    limit: number;
+    success: boolean;
+  }> {
+    const { requester } = dto;
+
+    this.logger.log(`Message received USERS-GET-MANY: (${requester.sub})`);
+
+    const userCreator = await this.checkUser(requester);
+    const team = await this.prisma.team.findFirst({
+      where: {
+        id: requester.teamId,
+      },
+    });
+
+    if (userCreator.role === UserRole.CLIENT) {
+      throw new RpcException({
+        statusCode: 403,
+        message:
+          'Seul les créateur/admin de la team peut recuperer les utilisateurs',
+      });
+    }
+
+    let list = await this.users({
+      where: {
+        teamId: requester.teamId,
+        deletedAt: undefined,
+        role: userCreator.role === UserRole.ADMIN ? UserRole.CLIENT : undefined,
+      },
+    });
+
+    if (userCreator.role === UserRole.CREATOR) {
+      list = list.filter((u) => u.role != UserRole.CREATOR);
+    }
+
+    return {
+      users: list.map(({ passwordHash, ...rest }) => rest),
+      team: team as Team,
+      total: list.length,
+      page: 1,
+      limit: 250,
+      success: true,
+    };
+  }
+
+  /**
+   * Bonus — GET /auth/users/:id : Récupère un utilisateur à partir de son id
+   */
+  async findOneUserByTeam(dto: GetUserDto): Promise<{
+    user: Omit<User, 'passwordHash'>;
+    team: Team;
+    success: boolean;
+  }> {
+    const { id, requester } = dto;
+
+    this.logger.log(`Message received USERS-GET-ONE: (${requester.sub})`);
+
+    const userCreator = await this.checkUser(requester);
+    const team = await this.prisma.team.findUnique({
+      where: {
+        id: userCreator.id,
+      },
+    });
+
+    if (userCreator.role === UserRole.CLIENT) {
+      throw new RpcException({
+        statusCode: 403,
+        message:
+          'Seul les créateur/admin de la team peut recuperer de la sorte un utilisateur',
+      });
+    }
+
+    const target = await this.user({ id });
+    if (!target || target.deletedAt || target.teamId !== requester.teamId) {
+      throw new RpcException({
+        statusCode: 404,
+        message: 'Utilisateur introuvable dans cette team',
+      });
+    }
+
+    const { passwordHash: _omit, ...safeUser } = target;
+
+    return {
+      user: safeUser,
+      team: team as Team,
+      success: true,
+    };
+  }
+
+  /**
+   * Bonus — GET /auth/users/:id : Récupère un utilisateur à partir de son id
+   */
+  async updateUserByTeam(dto: UpdateUserDto): Promise<{
+    user: Omit<User, 'passwordHash'>;
+    message: string;
+  }> {
+    const { id, username, password, accessPolicy, role, requester } = dto;
+
+    this.logger.log(`Message received USERS-UPDATE: (${requester.sub})`);
+
+    const userCreator = await this.checkUser(requester);
+
+    if (userCreator.role === UserRole.CLIENT) {
+      throw new RpcException({
+        statusCode: 403,
+        message:
+          'Seul les créateur/admin de la team peut recuperer de la sorte un utilisateur',
+      });
+    }
+
+    if (role === UserRole.CREATOR) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'Le rôle CREATOR ne peut pas être attribué via cette méthode',
+      });
+    }
+
+    if (id === requester.sub) {
+      throw new RpcException({
+        statusCode: 400,
+        message:
+          'Un utilisateur ne peut pas mettre à jour ses données de ce méthode',
+      });
+    }
+
+    if (role === UserRole.ADMIN && userCreator.role == UserRole.ADMIN) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'Un Admin ne peut pas modifier un autre admin',
+      });
+    }
+
+    const target = await this.user({ id });
+    if (!target || target.deletedAt || target.teamId !== requester.teamId) {
+      throw new RpcException({
+        statusCode: 404,
+        message: 'Utilisateur introuvable dans cette team',
+      });
+    }
+
+    if (target.role === UserRole.CREATOR) {
+      throw new RpcException({
+        statusCode: 400,
+        message: 'Le créateur de la team ne peut pas être modifié ici.',
+      });
+    }
+
+    const hashedPassword = password && (await bcrypt.hash(password, 10));
+
+    const updated = await this.updateUser({
+      where: {
+        id,
+      },
+      data: {
+        username: username ? username : undefined,
+        passwordHash: password ? hashedPassword : undefined,
+        role,
+        accessPolicy: { ...accessPolicy },
+      },
+    });
+
+    if (password) {
+      await this.notificationService.send({
+        type: 'PASSWORD_RECREATED',
+        email: updated.email,
+        payload: {
+          temporaryPassword: password,
+          userName: updated.username,
+          changedAt: new Date().toDateString(),
+        },
+      });
+    }
+
+    const { passwordHash: _omit, ...safeUser } = updated;
+
+    return {
+      user: safeUser,
+      message: "L'utilisateur a été mit à jour avec succès.",
+    };
+  }
+
+  /**
    * DELETE /auth/users/:id — Supprime (soft-delete) un User de la Team.
    * Réservé au CREATOR. Le CREATOR ne peut pas se supprimer lui-même.
    */
-  async deleteUserInTeam(
-    dto: DeleteUserDto,
-  ): Promise<Omit<User, 'passwordHash'>> {
+  async deleteUserInTeam(dto: DeleteUserDto): Promise<{
+    user: Omit<User, 'passwordHash'>;
+    success: boolean;
+    deletedAt: string;
+  }> {
     try {
       const { id, requester } = dto;
 
       this.logger.log(
-        `Message received on UsersService => DeleteInTeam (${id})`,
+        `Message received USERS-DELETE: (${requester.sub}), to-delete: (${id})`,
       );
 
-      if (requester.role === UserRole.CLIENT) {
+      const userCreator = await this.checkUser(requester);
+
+      if (userCreator.role === UserRole.CLIENT) {
         throw new RpcException({
           statusCode: 403,
           message:
@@ -186,7 +408,7 @@ export class UserService {
       }
 
       const target = await this.user({ id });
-      if (!target || target.teamId !== requester.teamId) {
+      if (!target || target.deletedAt || target.teamId !== requester.teamId) {
         throw new RpcException({
           statusCode: 404,
           message: 'Utilisateur introuvable dans cette team',
@@ -200,9 +422,23 @@ export class UserService {
         });
       }
 
+      if (
+        target.role === UserRole.ADMIN &&
+        userCreator.role == UserRole.ADMIN
+      ) {
+        throw new RpcException({
+          statusCode: 400,
+          message: 'Un Admin ne peut pas supprimer un autre admin',
+        });
+      }
+
       const deleted = await this.deleteUser({ id });
       const { passwordHash: _omit, ...safeUser } = deleted;
-      return safeUser;
+      return {
+        user: safeUser,
+        success: true,
+        deletedAt: String(deleted.deletedAt),
+      };
     } catch (error: any) {
       if (error instanceof RpcException) {
         throw error;
@@ -219,10 +455,32 @@ export class UserService {
   }
 
   /**
-   * Bonus — GET /auth/users : liste les Users actifs de la Team du requester.
+   * CHECKER /users : Fait un petit check sur utilisateur du AuthContext/requester
    */
-  async findUsersByTeam(teamId: string): Promise<Omit<User, 'passwordHash'>[]> {
-    const list = await this.users({ where: { teamId, deletedAt: undefined } });
-    return list.map(({ passwordHash, ...rest }) => rest);
+  private async checkUser(requester: AuthContextDto) {
+    const user = await this.user({ id: requester.sub });
+
+    if (!user || user.deletedAt) {
+      throw new RpcException({
+        statusCode: 401,
+        message: 'Utilisateur introuvable',
+      });
+    }
+
+    if (user.status == UserStatus.UNAUTHENTICATED) {
+      throw new RpcException({
+        statusCode: 401,
+        message: 'Veillez verifier votre email.',
+      });
+    }
+
+    if (user.teamId != requester.teamId) {
+      throw new RpcException({
+        statusCode: 401,
+        message: 'Votre Team est bloquante...',
+      });
+    }
+
+    return user;
   }
 }

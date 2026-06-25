@@ -8,6 +8,8 @@ import { MICROSERVICES_CLIENTS } from './app.constant';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
+import { MeModule } from './me/me.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { TeamModule } from './team/team.module';
     }),
     AuthModule,
     TeamModule,
+    MeModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

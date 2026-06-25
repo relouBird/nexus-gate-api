@@ -1,31 +1,3 @@
-/*
-  Warnings:
-
-  - The primary key for the `user` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `first_name` on the `user` table. All the data in the column will be lost.
-  - You are about to drop the column `last_name` on the `user` table. All the data in the column will be lost.
-  - You are about to drop the column `password` on the `user` table. All the data in the column will be lost.
-  - You are about to alter the column `email` on the `user` table. The data in that column could be lost. The data in that column will be cast from `VarChar(255)` to `VarChar(191)`.
-  - Added the required column `password_hash` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `team_id` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `username` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
--- AlterTable
-ALTER TABLE `user` DROP PRIMARY KEY,
-    DROP COLUMN `first_name`,
-    DROP COLUMN `last_name`,
-    DROP COLUMN `password`,
-    ADD COLUMN `password_hash` VARCHAR(191) NOT NULL,
-    ADD COLUMN `role` ENUM('CREATOR', 'ADMIN', 'CLIENT') NOT NULL DEFAULT 'CLIENT',
-    ADD COLUMN `team_id` VARCHAR(191) NOT NULL,
-    ADD COLUMN `updatedAt` DATETIME(3) NOT NULL,
-    ADD COLUMN `username` VARCHAR(191) NOT NULL,
-    MODIFY `id` VARCHAR(191) NOT NULL,
-    MODIFY `email` VARCHAR(191) NOT NULL,
-    ADD PRIMARY KEY (`id`);
-
 -- CreateTable
 CREATE TABLE `Team` (
     `id` VARCHAR(191) NOT NULL,
@@ -35,6 +7,52 @@ CREATE TABLE `Team` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Team_slug_key`(`slug`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `User` (
+    `id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `password_hash` VARCHAR(191) NOT NULL,
+    `role` ENUM('CREATOR', 'ADMIN', 'CLIENT') NOT NULL DEFAULT 'CLIENT',
+    `status` ENUM('AUTHENTICATED', 'UNAUTHENTICATED') NOT NULL DEFAULT 'UNAUTHENTICATED',
+    `team_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `deleted_at` DATETIME(3) NULL,
+    `access_policy` JSON NOT NULL,
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Session` (
+    `id` VARCHAR(36) NOT NULL,
+    `user_id` VARCHAR(36) NOT NULL,
+    `access_token` TEXT NOT NULL,
+    `refresh_token` VARCHAR(50) NOT NULL,
+    `token_type` VARCHAR(20) NOT NULL DEFAULT 'bearer',
+    `expires_in` INTEGER NOT NULL DEFAULT 3600,
+    `expires_at` DATETIME(3) NOT NULL,
+    `logged_out` BOOLEAN NOT NULL DEFAULT false,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Session_user_id_key`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Otp` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `code` VARCHAR(6) NOT NULL,
+    `expires_at` DATETIME(3) NOT NULL,
+    `used` BOOLEAN NOT NULL DEFAULT false,
+    `user_id` VARCHAR(36) NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -63,7 +81,6 @@ CREATE TABLE `Server` (
     `type` ENUM('CLOUD', 'LOCAL') NOT NULL DEFAULT 'CLOUD',
     `team_id` VARCHAR(191) NOT NULL,
     `require_token` BOOLEAN NOT NULL DEFAULT false,
-    `access_policy` JSON NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -116,7 +133,13 @@ CREATE TABLE `RequestLog` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `User` ADD CONSTRAINT `User_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `User` ADD CONSTRAINT `User_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Session` ADD CONSTRAINT `Session_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Otp` ADD CONSTRAINT `Otp_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `GatewayToken` ADD CONSTRAINT `GatewayToken_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
