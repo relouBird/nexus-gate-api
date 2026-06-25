@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { MailService } from '../mail.service';
 import {
   PasswordChangedEmail,
+  PasswordRecreatedByAdminEmail,
   AccountCreatedEmail,
   AccountDeletedEmail,
 } from '../templates/index';
@@ -11,6 +12,13 @@ import type { UserRole } from '../../generated/prisma-client';
 // ─── Payloads ─────────────────────────────────────────────────
 
 type PasswordChangedPayload = {
+  userName?: string;
+  changedAt?: string;
+  logoUrl?: string;
+};
+
+type PasswordRecreatedByAdminPayload = {
+  temporaryPassword: string;
   userName?: string;
   changedAt?: string;
   logoUrl?: string;
@@ -40,6 +48,11 @@ type AccountDeletedPayload = {
 
 export type NotificationContext =
   | { type: 'PASSWORD_CHANGED'; email: string; payload: PasswordChangedPayload }
+  | {
+      type: 'PASSWORD_RECREATED';
+      email: string;
+      payload: PasswordRecreatedByAdminPayload;
+    }
   | { type: 'ACCOUNT_CREATED'; email: string; payload: AccountCreatedPayload }
   | { type: 'ACCOUNT_DELETED'; email: string; payload: AccountDeletedPayload };
 
@@ -61,6 +74,17 @@ export class NotificationsService {
         return {
           subject: 'Votre mot de passe NexusGate a été modifié',
           html: PasswordChangedEmail(
+            ctx.payload.userName,
+            ctx.payload.changedAt,
+            ctx.payload.logoUrl,
+          ),
+        };
+
+      case 'PASSWORD_RECREATED':
+        return {
+          subject: 'Votre mot de passe NexusGate a été modifié',
+          html: PasswordRecreatedByAdminEmail(
+            ctx.payload.temporaryPassword,
             ctx.payload.userName,
             ctx.payload.changedAt,
             ctx.payload.logoUrl,

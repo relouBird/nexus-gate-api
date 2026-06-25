@@ -48,7 +48,7 @@ export function AccountCreatedEmail(
     ])}
 
     ${Paragraph('Voici votre mot de passe temporaire pour vous connecter :')}
-    ${CodeBox(temporaryPassword, 'Mot de passe temporaire', 0)}
+    ${CodeBox(temporaryPassword, 'Mot de passe temporaire', 60)}
 
     ${InfoBox(
       '⚠️ <strong>Ce mot de passe est temporaire.</strong> Vous devrez obligatoirement le changer dès votre première connexion via votre profil. Ne le partagez avec personne.',
@@ -137,6 +137,56 @@ export function PasswordChangedEmail(
     ])}
 
     ${InfoBox('Votre compte est sécurisé avec votre nouveau mot de passe.', 'success')}
+    ${Divider()}
+    ${InfoBox(
+      "<strong>Vous n'êtes pas à l'origine de ce changement ?</strong><br/>Contactez immédiatement notre support — votre compte pourrait être compromis.",
+      'warning',
+    )}
+    ${Button('Contacter le support', 'mailto:support@nexusgate.io', 'warning')}
+    ${SupportSection()}
+  `;
+
+  return EmailLayout(
+    'Mot de passe modifié',
+    content,
+    'Votre mot de passe NexusGate a été modifié.',
+    logoUrl,
+  );
+}
+
+// ─── 3. Changement de mot de passe — ME_CHANGE_PASSWORD ──────
+// L'utilisateur change son propre mot de passe via son profil
+
+export function PasswordRecreatedByAdminEmail(
+  temporaryPassword: string,
+  userName?: string,
+  changedAt?: string,
+  logoUrl?: string,
+): string {
+  const date =
+    changedAt ??
+    new Date().toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+  const content = `
+    ${Greeting(userName)}
+    ${Paragraph(`Votre mot de passe NexusGate a été <strong style="color:${C.success};">modifié avec succès</strong>.`)}
+
+    ${MetaTable([
+      { label: 'Date', value: date },
+      { label: 'Plateforme', value: 'nexusgate.io' },
+    ])}
+
+    ${InfoBox('Votre compte est sécurisé avec un nouveau mot de passe.', 'success')}
+
+    ${Paragraph('Voici votre mot de passe temporaire pour vous connecter :')}
+    ${CodeBox(temporaryPassword, 'Mot de passe temporaire', 60)}
+    
     ${Divider()}
     ${InfoBox(
       "<strong>Vous n'êtes pas à l'origine de ce changement ?</strong><br/>Contactez immédiatement notre support — votre compte pourrait être compromis.",

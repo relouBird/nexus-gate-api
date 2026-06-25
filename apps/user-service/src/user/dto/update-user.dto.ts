@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   MinLength,
   ValidateNested,
@@ -18,14 +19,19 @@ import { AccessPolicyDto } from './access-policy.dto';
  * `role` ne peut être que ADMIN ou CLIENT — CREATOR est rejeté en service
  * (un seul CREATOR par Team, fixé via team.register).
  */
-export class CreateUserDto {
+export class UpdateUserDto {
+  @IsNotEmpty()
+  @IsUUID()
+  id!: string;
+
+  @IsOptional()
   @IsString()
-  username!: string;
+  username?: string;
 
   @IsEmail()
   email!: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @MinLength(8)
   @Matches(
@@ -35,11 +41,11 @@ export class CreateUserDto {
         'Le mot de passe doit contenir au minimum une Majuscule, une Minuscule, un Nombre, et un Caractère Spécial',
     },
   )
-  password!: string;
+  password?: string;
 
   @IsOptional()
   @IsEnum(UserRole)
-  role?: UserRole;
+  role!: UserRole;
 
   @IsNotEmpty()
   @ValidateNested()

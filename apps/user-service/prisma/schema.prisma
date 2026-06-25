@@ -82,6 +82,8 @@ model User {
   updatedAt    DateTime   @updatedAt @map("updated_at")
   deletedAt    DateTime?  @map("deleted_at")
 
+  accessPolicy Json @default("{\"mode\":\"include\",\"serverIds\":[\"*\"]}") @map("access_policy")
+
   gatewayTokens GatewayToken[]
   session       Session?
   otps          Otp[]
@@ -144,8 +146,6 @@ model Server {
   team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   requireToken Boolean @default(false) @map("require_token")
-
-  accessPolicy Json @default("{\"mode\":\"include\",\"userIds\":[\"*\"]}") @map("access_policy")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updatedAt")

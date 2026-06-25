@@ -25,6 +25,14 @@ export const AUTH_PATTERNS = {
 } as const;
 
 export const USER_PATTERNS = {
+  // Gérer les utilisateurs
+  USERS_CREATE: 'users.create',
+  USERS_DELETE: 'users.delete',
+  USERS_FIND_ALL: 'users.findAll',
+  USERS_FIND_ONE: 'users.findOne',
+  USERS_UPDATE: 'users.update',
+
+  // Pour l'utilisateur
   ME_GET: 'me.get',
   ME_CHANGE_PASSWORD: 'me.change.password',
   ME_CHANGE_USERNAME: 'me.change.username',

@@ -3,10 +3,12 @@ import { Type } from 'class-transformer';
 import { AuthContextDto } from '../../common/interfaces/auth-context.dto';
 
 /**
- * Supprime (soft-delete) un User de la Team du requester.
- * Réservé au CREATOR. Le CREATOR lui-même ne peut pas être supprimé ici.
+ * Crée un User dans la Team du requester. Réservé au CREATOR.
+ * `role` ne peut être que ADMIN ou CLIENT — CREATOR est rejeté en service
+ * (un seul CREATOR par Team, fixé via team.register).
  */
-export class DeleteUserDto {
+export class GetUserDto {
+  @IsNotEmpty()
   @IsUUID()
   id!: string;
 
