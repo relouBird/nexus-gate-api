@@ -42,6 +42,17 @@ import { UserModule } from './user/user.module';
           }),
           inject: [ConfigService],
         },
+        {
+          imports: [ConfigModule],
+          name: MICROSERVICES_CLIENTS.CONFIGURATION_SERVICE,
+          useFactory: (config: ConfigService) => ({
+            transport: Transport.TCP,
+            options: {
+              port: Number(config.get('CONFIGURATION_SERVICE_PORT')) ?? 9005,
+            },
+          }),
+          inject: [ConfigService],
+        },
       ],
       isGlobal: true,
     }),
