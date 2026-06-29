@@ -62,7 +62,7 @@ export class AppService {
 
       if (user.status == UserStatus.UNAUTHENTICATED) {
         throw new RpcException({
-          statusCode: 401,
+          statusCode: 403,
           message: 'Veillez verifier votre email.',
         });
       }

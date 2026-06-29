@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { MeModule } from './me/me.module';
 import { UserModule } from './user/user.module';
+import { ConfigurationModule } from './configuration/configuration.module';
 
 @Module({
   imports: [
@@ -42,6 +43,17 @@ import { UserModule } from './user/user.module';
           }),
           inject: [ConfigService],
         },
+        {
+          imports: [ConfigModule],
+          name: MICROSERVICES_CLIENTS.CONFIGURATION_SERVICE,
+          useFactory: (config: ConfigService) => ({
+            transport: Transport.TCP,
+            options: {
+              port: Number(config.get('CONFIGURATION_SERVICE_PORT')) ?? 9005,
+            },
+          }),
+          inject: [ConfigService],
+        },
       ],
       isGlobal: true,
     }),
@@ -49,6 +61,7 @@ import { UserModule } from './user/user.module';
     TeamModule,
     MeModule,
     UserModule,
+    ConfigurationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -19,7 +19,7 @@ export class ChangePasswordWithOtpDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&\-_])[A-Za-z\d@$!%*?&\-_]+$/, {
     message:
       'Le mot de passe doit au minimum une Majuscule, une Minuscule, un  Nombre, and un Caractère Special',
   })

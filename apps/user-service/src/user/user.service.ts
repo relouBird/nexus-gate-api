@@ -226,7 +226,7 @@ export class UserService {
     let list = await this.users({
       where: {
         teamId: requester.teamId,
-        deletedAt: undefined,
+        deletedAt: null,
         role: userCreator.role === UserRole.ADMIN ? UserRole.CLIENT : undefined,
       },
     });
