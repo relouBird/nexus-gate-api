@@ -27,8 +27,14 @@
     "db:user:studio": "prisma studio --config apps/user-service/prisma.config.ts",
     "db:user:migrate": "prisma migrate dev --name init --config apps/user-service/prisma.config.ts",
     "db:user:reset": "prisma migrate reset --config apps/user-service/prisma.config.ts",
+    "db:configuration:generate": "prisma generate --config apps/configuration-service/prisma.config.ts",
+    "db:configuration:format": "prisma format --schema=apps/configuration-service/prisma/schema.prisma",
+    "db:configuration:studio": "prisma studio --config apps/configuration-service/prisma.config.ts",
+    "db:configuration:migrate": "prisma migrate dev --name init --config apps/configuration-service/prisma.config.ts",
+    "db:configuration:reset": "prisma migrate reset --config apps/configuration-service/prisma.config.ts",
     "start:auth-service": "nest start --watch auth-service",
     "start:user-service": "nest start --watch user-service",
+    "start:configuration-service": "nest start --watch configuration-service",
     "start:gateway": "nest start --watch api-gateway"
   },
   "dependencies": {

@@ -8,6 +8,9 @@ import { jwtConstants } from './app.constants';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
 import { RedisModule } from './redis/redis.module';
+import { ServerModule } from './server/server.module';
+import { RuleModule } from './rule/rule.module';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { RedisModule } from './redis/redis.module';
       signOptions: { expiresIn: '1d' }, // '60s', '15m','1h', '7d', etc.
     }),
     // Les modules métiers...
+    ServerModule,
+    RuleModule,
+    TokenModule,
 
     // Les utilitaires
     RedisModule,

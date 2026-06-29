@@ -19,6 +19,6 @@ export class AppService {
   getHello(): string {
     this.logger.log('Message received on CONFIGURATION-SERVICE : Hello World');
 
-    return '🚀 AUTH SERVICE API is running successfully.';
+    return '🚀 CONFIGURATION SERVICE API is running successfully.';
   }
 }

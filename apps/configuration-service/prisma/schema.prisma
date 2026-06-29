@@ -30,6 +30,11 @@ enum ServerType {
   LOCAL
 }
 
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+}
+
 enum RuleType {
   IP_BLACKLIST
   IP_WHITELIST
@@ -120,11 +125,32 @@ model Otp {
   user      User?    @relation(fields: [userId], references: [id])
 }
 
+// ─── CONFIG ────────────────────────────────────────────────────
+
+model Server {
+  id         String       @id @default(uuid())
+  name       String
+  identifier String       @unique
+  url        String
+  status     ServerStatus @default(ONLINE)
+  type       ServerType   @default(CLOUD)
+  teamId     String       @map("team_id")
+  team       Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  requireToken Boolean @default(false) @map("require_token")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updatedAt")
+
+  rules               Rule[]
+  tunnelSession       TunnelSession?
+  gatewayTokenServers GatewayTokenServer[]
+}
+
 model GatewayToken {
   id        String   @id @default(uuid())
   name      String
   value     String   @unique
-  scope     String   @default("*")
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   teamId    String   @map("team_id")
@@ -132,26 +158,18 @@ model GatewayToken {
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updatedAt")
+
+  scope GatewayTokenServer[]
 }
 
-// ─── CONFIG ────────────────────────────────────────────────────
+model GatewayTokenServer {
+  gatewayTokenId String
+  gatewayToken   GatewayToken @relation(fields: [gatewayTokenId], references: [id], onDelete: Cascade)
+  serverId       String
+  server         Server       @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
 
-model Server {
-  id         String     @id @default(uuid())
-  name       String
-  identifier String     @unique
-  url        String
-  type       ServerType @default(CLOUD)
-  teamId     String     @map("team_id")
-  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  requireToken Boolean @default(false) @map("require_token")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updatedAt")
-
-  rules         Rule[]
-  tunnelSession TunnelSession?
+  @@id([gatewayTokenId, serverId])
 }
 
 model Rule {

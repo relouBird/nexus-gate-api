@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { MeModule } from './me/me.module';
 import { UserModule } from './user/user.module';
+import { ConfigurationModule } from './configuration/configuration.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { UserModule } from './user/user.module';
     TeamModule,
     MeModule,
     UserModule,
+    ConfigurationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

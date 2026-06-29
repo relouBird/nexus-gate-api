@@ -28,13 +28,10 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).+$/,
-    {
-      message:
-        'Le mot de passe doit contenir au minimum une Majuscule, une Minuscule, un Nombre, et un Caractère Spécial',
-    },
-  )
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&\-_])[A-Za-z\d@$!%*?&\-_]+$/, {
+    message:
+      'Le mot de passe doit contenir au minimum une Majuscule, une Minuscule, un Nombre, et un Caractère Spécial',
+  })
   password!: string;
 
   @IsOptional()

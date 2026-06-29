@@ -6,6 +6,7 @@ import {
   ConflictException,
   InternalServerErrorException,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -38,6 +39,9 @@ export function handleServiceError(error: any, logger: Logger): never {
 
     case 401:
       throw new UnauthorizedException(rpcError.message);
+
+    case 403:
+      throw new ForbiddenException(rpcError.message);
 
     case 404:
       throw new NotFoundException(rpcError.message);
