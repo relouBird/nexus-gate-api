@@ -116,6 +116,14 @@ export class ConfigurationService {
     });
   }
 
+  getAllRules(requester: any) {
+    return this.dispatch({
+      pattern: CONFIGURATION_PATTERNS.RULE_FIND_GLOBAL,
+      payload: {},
+      requester,
+    });
+  }
+
   updateRule(id: string, dto: any, requester: any) {
     return this.dispatch({
       pattern: CONFIGURATION_PATTERNS.RULE_UPDATE,
