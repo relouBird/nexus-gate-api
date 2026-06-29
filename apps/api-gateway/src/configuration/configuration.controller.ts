@@ -55,10 +55,7 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Get('servers/:id')
-  getServer(
-    @Request() req: AuthRequest,
-    @Param('id') id: string,
-  ) {
+  getServer(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.configurationService.getServer(id, req.user);
   }
 
@@ -83,10 +80,7 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Delete('servers/:id')
-  deleteServer(
-    @Request() req: AuthRequest,
-    @Param('id') id: string,
-  ) {
+  deleteServer(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.configurationService.deleteServer(id, req.user);
   }
 
@@ -102,11 +96,7 @@ export class ConfigurationController {
     @Body() dto: any,
   ) {
     this.validateRequestBody(dto);
-    return this.configurationService.updateTokenRequirement(
-      id,
-      dto,
-      req.user,
-    );
+    return this.configurationService.updateTokenRequirement(id, dto, req.user);
   }
 
   /**
@@ -115,10 +105,7 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Post('servers/:id/revoke')
-  revokeServer(
-    @Request() req: AuthRequest,
-    @Param('id') id: string,
-  ) {
+  revokeServer(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.configurationService.revokeServer(id, req.user);
   }
 
@@ -153,11 +140,7 @@ export class ConfigurationController {
     @Body() dto: any,
   ) {
     this.validateRequestBody(dto);
-    return this.configurationService.createRule(
-      serverId,
-      dto,
-      req.user,
-    );
+    return this.configurationService.createRule(serverId, dto, req.user);
   }
 
   /**
@@ -166,14 +149,18 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Get('servers/:id/rules')
-  getRules(
-    @Request() req: AuthRequest,
-    @Param('id') serverId: string,
-  ) {
-    return this.configurationService.getRules(
-      serverId,
-      req.user,
-    );
+  getRules(@Request() req: AuthRequest, @Param('id') serverId: string) {
+    return this.configurationService.getRules(serverId, req.user);
+  }
+
+  /**
+   * GET /configuration/servers/rules
+   * Liste des règles de tous les serveurs
+   */
+  @HttpCode(HttpStatus.OK)
+  @Get('rules')
+  getAllRules(@Request() req: AuthRequest) {
+    return this.configurationService.getAllRules(req.user);
   }
 
   /**
@@ -188,11 +175,7 @@ export class ConfigurationController {
     @Body() dto: any,
   ) {
     this.validateRequestBody(dto);
-    return this.configurationService.updateRule(
-      id,
-      dto,
-      req.user,
-    );
+    return this.configurationService.updateRule(id, dto, req.user);
   }
 
   /**
@@ -201,10 +184,7 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Delete('rules/:id')
-  deleteRule(
-    @Request() req: AuthRequest,
-    @Param('id') id: string,
-  ) {
+  deleteRule(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.configurationService.deleteRule(id, req.user);
   }
 
@@ -218,15 +198,9 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.CREATED)
   @Post('gateway-tokens')
-  createGatewayToken(
-    @Request() req: AuthRequest,
-    @Body() dto: any,
-  ) {
+  createGatewayToken(@Request() req: AuthRequest, @Body() dto: any) {
     this.validateRequestBody(dto);
-    return this.configurationService.createGatewayToken(
-      dto,
-      req.user,
-    );
+    return this.configurationService.createGatewayToken(dto, req.user);
   }
 
   /**
@@ -245,13 +219,7 @@ export class ConfigurationController {
    */
   @HttpCode(HttpStatus.OK)
   @Delete('gateway-tokens/:id')
-  revokeGatewayToken(
-    @Request() req: AuthRequest,
-    @Param('id') id: string,
-  ) {
-    return this.configurationService.revokeGatewayToken(
-      id,
-      req.user,
-    );
+  revokeGatewayToken(@Request() req: AuthRequest, @Param('id') id: string) {
+    return this.configurationService.revokeGatewayToken(id, req.user);
   }
 }

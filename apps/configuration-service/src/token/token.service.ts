@@ -23,7 +23,7 @@ export class TokenService {
 
       const value = `gw_${randomBytes(24).toString('hex')}`;
 
-      return await this.prisma.gatewayToken.create({
+      const token = await this.prisma.gatewayToken.create({
         data: {
           name,
           value,
@@ -36,6 +36,8 @@ export class TokenService {
         },
         include: { scope: true },
       });
+
+      return { token, message: 'Token API créé avec Succès...' };
     } catch (error: any) {
       if (error instanceof RpcException) throw error;
       this.logger.error(
@@ -56,10 +58,16 @@ export class TokenService {
         `Message received GATEWAY-TOKEN-FIND-ALL: (${requester.sub})`,
       );
 
-      return await this.prisma.gatewayToken.findMany({
+      const tokens = await this.prisma.gatewayToken.findMany({
         where: { teamId: requester.teamId },
         include: { scope: true },
       });
+
+      return {
+        tokens,
+        total: tokens.length,
+        message: 'Vos Tokens recuperés avec succès...',
+      };
     } catch (error: any) {
       if (error instanceof RpcException) throw error;
       this.logger.error(
@@ -88,10 +96,15 @@ export class TokenService {
         });
 
       // Flag cosmétique pour l'instant, comme demandé
-      return await this.prisma.gatewayToken.update({
+      const deleted = await this.prisma.gatewayToken.update({
         where: { id },
         data: { revoked: true },
       });
+
+      return {
+        token: deleted,
+        message: 'Token supprimé avec succès...',
+      };
     } catch (error: any) {
       if (error instanceof RpcException) throw error;
       this.logger.error(

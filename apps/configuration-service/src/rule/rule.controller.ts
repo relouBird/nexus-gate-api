@@ -7,6 +7,7 @@ import {
   FindAllRulesDto,
   UpdateRuleDto,
   FindOneRuleDto,
+  FindGlobalRulesDto,
 } from './rule.dto';
 
 @Controller()
@@ -21,6 +22,11 @@ export class RuleController {
   @MessagePattern(CONFIGURATION_PATTERNS.RULE_FIND_ALL)
   findAll(@Payload() dto: FindAllRulesDto) {
     return this.ruleService.findAll(dto);
+  }
+
+  @MessagePattern(CONFIGURATION_PATTERNS.RULE_FIND_GLOBAL)
+  findGlobal(@Payload() dto: FindGlobalRulesDto) {
+    return this.ruleService.findGlobal(dto);
   }
 
   @MessagePattern(CONFIGURATION_PATTERNS.RULE_UPDATE)

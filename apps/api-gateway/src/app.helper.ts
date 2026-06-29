@@ -23,11 +23,9 @@ export interface DispatchInteface {
 export function handleServiceError(error: any, logger: Logger): never {
   // Service inaccessible
   if (error?.code === 'ECONNREFUSED' || error?.code === 'ECONNRESET') {
-    logger.error('Auth service is unreachable');
+    logger.error('Dedicated service is unreachable');
 
-    throw new ServiceUnavailableException(
-      "Le service d'authentification est indisponible",
-    );
+    throw new ServiceUnavailableException('Le service dedié est indisponible');
   }
 
   // Erreur RPC renvoyée par le microservice

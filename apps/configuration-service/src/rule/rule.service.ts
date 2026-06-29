@@ -6,6 +6,7 @@ import {
   FindAllRulesDto,
   UpdateRuleDto,
   FindOneRuleDto,
+  FindGlobalRulesDto,
 } from './rule.dto';
 
 @Injectable()
@@ -69,6 +70,53 @@ export class RuleService {
     } catch (error: any) {
       if (error instanceof RpcException) throw error;
       this.logger.error(`Rule-FindAll failed: ${error.message}`, error.stack);
+      throw new RpcException({
+        statusCode: 500,
+        message: 'Erreur lors de la récupération des règles',
+      });
+    }
+  }
+
+  async findGlobal(dto: FindGlobalRulesDto) {
+    try {
+      const { requester } = dto;
+
+      this.logger.log(`Message received RULE-TEAM-ALL: (${requester.teamId})`);
+
+      const rules = await this.prisma.rule.findMany({
+        where: {
+          server: {
+            teamId: requester.teamId,
+          },
+        },
+        include: {
+          server: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+        },
+      });
+
+      return {
+        rules: rules.map((r) => ({
+          ...r,
+          serverName: r.server.name,
+          server: undefined,
+        })),
+        total: rules.length,
+        message: 'Règles récupérées avec succès.',
+      };
+    } catch (error: any) {
+      if (error instanceof RpcException) throw error;
+
+      this.logger.error(
+        `Rule-FindGlobal failed: ${error.message}`,
+        error.stack,
+      );
+
       throw new RpcException({
         statusCode: 500,
         message: 'Erreur lors de la récupération des règles',
