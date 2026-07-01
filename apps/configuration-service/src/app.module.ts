@@ -11,6 +11,7 @@ import { RedisModule } from './redis/redis.module';
 import { ServerModule } from './server/server.module';
 import { RuleModule } from './rule/rule.module';
 import { TokenModule } from './token/token.module';
+import { RequestLogsModule } from './request-logs/request-logs.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TokenModule } from './token/token.module';
     ServerModule,
     RuleModule,
     TokenModule,
+    RequestLogsModule,
 
     // Les utilitaires
     RedisModule,

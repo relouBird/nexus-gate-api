@@ -7,22 +7,72 @@ import {
   FindAllGatewayTokensDto,
   RemoveGatewayTokenDto,
 } from './token.dto';
+import { AccessPolicy, canUserAccess } from '../utils/policy.util';
+import { RedisService } from '../redis/redis.service';
+
+const DEFAULT_TTL = 30 * 24 * 60 * 60; // 30 jours en secondes
 
 @Injectable()
 export class TokenService {
   private readonly logger = new Logger(TokenService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async create(dto: CreateGatewayTokenDto) {
     try {
-      const { requester, name, scope } = dto;
+      const { requester, name, scope, expiresAt } = dto;
       this.logger.log(
         `Message received GATEWAY-TOKEN-CREATE: (${requester.sub})`,
       );
 
+      // 1. Récupérer l'accessPolicy du créateur
+      const user = await this.prisma.user.findUniqueOrThrow({
+        where: { id: requester.sub },
+      });
+      const policy = user.accessPolicy as unknown as AccessPolicy;
+
+      // 2. Résoudre les serverIds du scope
+      let scopeServerIds: string[];
+
+      if (!scope || scope.length === 0) {
+        // Pas de restriction → tous les serveurs accessibles par cet utilisateur
+        const allServers = await this.prisma.server.findMany({
+          where: { teamId: requester.teamId },
+          select: { id: true },
+        });
+        scopeServerIds = allServers
+          .filter((s) => canUserAccess(policy, s.id))
+          .map((s) => s.id);
+      } else {
+        // Scope explicite → on valide chaque serverId contre la policy
+        const disallowed = scope.filter((sid) => !canUserAccess(policy, sid));
+        if (disallowed.length > 0) {
+          throw new RpcException({
+            statusCode: 403,
+            message: `Accès refusé pour les serveurs : ${disallowed.join(', ')}`,
+          });
+        }
+        scopeServerIds = scope;
+      }
+
+      // 3. Calculer le TTL Redis
+      let ttl = DEFAULT_TTL;
+      if (expiresAt) {
+        ttl = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
+        if (ttl <= 0)
+          throw new RpcException({
+            statusCode: 400,
+            message: "Date d'expiration invalide",
+          });
+      }
+
+      // 4. Générer la valeur du token
       const value = `gw_${randomBytes(24).toString('hex')}`;
 
+      // 5. Créer en DB (token + jointures scope)
       const token = await this.prisma.gatewayToken.create({
         data: {
           name,
@@ -36,6 +86,18 @@ export class TokenService {
         },
         include: { scope: true },
       });
+
+      // 6. Stocker en Redis pour validation rapide par le Forwarding Service
+      await this.redis.set(
+        `gw:${value}`,
+        JSON.stringify({
+          id: token.id,
+          teamId: token.teamId,
+          userId: token.userId,
+          scopeServerIds,
+        }),
+        ttl,
+      );
 
       return { token, message: 'Token API créé avec Succès...' };
     } catch (error: any) {
@@ -100,6 +162,7 @@ export class TokenService {
         where: { id },
         data: { revoked: true },
       });
+      await this.redis.del(`gw:${token.value}`);
 
       return {
         token: deleted,
