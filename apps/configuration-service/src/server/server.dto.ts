@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -103,6 +104,24 @@ export class TokenAuthServerDto {
 
   @IsBoolean()
   requireToken!: boolean;
+
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AuthContextDto)
+  requester!: AuthContextDto;
+}
+
+// ───────────────────────────────────────────────────────────────
+// ─── ADD HEADER SERVER ───────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
+
+export class HeaderServerDto {
+  @IsNotEmpty()
+  @IsString()
+  id!: string;
+
+  @IsObject()
+  headers!: Record<string, string>;
 
   @IsNotEmpty()
   @ValidateNested()

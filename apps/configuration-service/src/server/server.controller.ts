@@ -10,6 +10,7 @@ import {
   TokenAuthServerDto,
   RevokeServerDto,
   GrantServerDto,
+  HeaderServerDto,
 } from './server.dto';
 
 @Controller()
@@ -44,6 +45,11 @@ export class ServerController {
   @MessagePattern(CONFIGURATION_PATTERNS.SERVER_TOKEN_AUTH)
   toggleTokenAuth(@Payload() dto: TokenAuthServerDto) {
     return this.serverService.toggleTokenAuth(dto);
+  }
+
+  @MessagePattern(CONFIGURATION_PATTERNS.SERVER_SET_HEADER)
+  setHeader(@Payload() dto: HeaderServerDto) {
+    return this.serverService.setHeader(dto);
   }
 
   @MessagePattern(CONFIGURATION_PATTERNS.SERVER_REVOKE)

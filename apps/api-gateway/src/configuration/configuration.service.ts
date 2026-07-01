@@ -72,6 +72,17 @@ export class ConfigurationService {
     });
   }
 
+  setHeaders(id: string, dto: any, requester: any) {
+    return this.dispatch({
+      pattern: CONFIGURATION_PATTERNS.SERVER_SET_HEADER,
+      payload: {
+        id,
+        ...dto,
+      },
+      requester,
+    });
+  }
+
   revokeServer(id: string, requester: any) {
     return this.dispatch({
       pattern: CONFIGURATION_PATTERNS.SERVER_REVOKE,
@@ -166,6 +177,14 @@ export class ConfigurationService {
     return this.dispatch({
       pattern: CONFIGURATION_PATTERNS.GATEWAY_TOKEN_REMOVE,
       payload: { id },
+      requester,
+    });
+  }
+
+  getLogs(payload: any, requester: any) {
+    return this.dispatch({
+      pattern: CONFIGURATION_PATTERNS.LOGS_FIND_ALL,
+      payload,
       requester,
     });
   }

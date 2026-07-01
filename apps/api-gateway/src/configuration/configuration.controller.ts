@@ -9,10 +9,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
 } from '@nestjs/common';
 import type { AuthRequest } from '../common/interfaces/auth-context.interface';
 import { ConfigurationService } from './configuration.service';
+import { GetLogsDto } from './configuration.dto';
 
 @Controller('configuration')
 export class ConfigurationController {
@@ -97,6 +99,21 @@ export class ConfigurationController {
   ) {
     this.validateRequestBody(dto);
     return this.configurationService.updateTokenRequirement(id, dto, req.user);
+  }
+
+  /**
+   * PATCH /configuration/servers/:id/set-headers
+   * Mettre à jour les headers
+   */
+  @HttpCode(HttpStatus.OK)
+  @Patch('servers/:id/set-headers')
+  updateHeaders(
+    @Request() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() dto: any,
+  ) {
+    this.validateRequestBody(dto);
+    return this.configurationService.setHeaders(id, dto, req.user);
   }
 
   /**
@@ -221,5 +238,18 @@ export class ConfigurationController {
   @Delete('gateway-tokens/:id')
   revokeGatewayToken(@Request() req: AuthRequest, @Param('id') id: string) {
     return this.configurationService.revokeGatewayToken(id, req.user);
+  }
+
+  // ============================================================
+  // 📜 LOGS
+  // ============================================================
+  /**
+   * GET /configuration/logs
+   * Liste les Logs
+   */
+  @HttpCode(HttpStatus.OK)
+  @Get('logs')
+  getLogs(@Request() req: AuthRequest, @Query() getLogsDto: GetLogsDto) {
+    return this.configurationService.getLogs(getLogsDto, req.user);
   }
 }

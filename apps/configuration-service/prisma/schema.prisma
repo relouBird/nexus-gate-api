@@ -137,6 +137,8 @@ model Server {
   teamId     String       @map("team_id")
   team       Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  headers Json @default("{}")
+
   requireToken Boolean @default(false) @map("require_token")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -158,6 +160,8 @@ model GatewayToken {
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updatedAt")
+
+  expiresAt DateTime?
 
   scope GatewayTokenServer[]
 }

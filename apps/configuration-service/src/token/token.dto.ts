@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -18,6 +19,10 @@ export class CreateGatewayTokenDto {
   @IsArray()
   @IsString({ each: true })
   scope?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 
   @IsNotEmpty()
   @ValidateNested()
