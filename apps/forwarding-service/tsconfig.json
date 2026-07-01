@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "../../dist/apps/forwarding-service",
+    "target": "ES6",
+    "strict": true,
+    "module": "commonjs",
+    // "skipLibCheck": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
+}

@@ -16,10 +16,6 @@ export const AUTH_PATTERNS = {
 
   HELLO: 'hello.get',
 
-  GATEWAY_TOKEN_CREATE: 'gateway-token.create',
-  GATEWAY_TOKEN_FIND_ALL: 'gateway-token.findAll',
-  GATEWAY_TOKEN_REVOKE: 'gateway-token.revoke',
-
   TEAM_REGISTER: 'team.register',
   TEAM_DELETE: 'team.delete',
 } as const;

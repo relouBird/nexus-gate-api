@@ -1,4 +1,3 @@
-import { GATEWAY_TOKEN_PATTERNS } from './gateway-token/gateway-token.constants';
 import { TEAM_PATTERNS } from './team/team.constants';
 
 export const jwtConstants = {
@@ -18,6 +17,5 @@ export const AUTH_PATTERNS = {
 
 export const FINAL_PATTERNS = {
   ...AUTH_PATTERNS,
-  ...GATEWAY_TOKEN_PATTERNS,
   ...TEAM_PATTERNS,
 };

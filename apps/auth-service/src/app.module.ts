@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './app.constants';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
-import { GatewayTokenModule } from './gateway-token/gateway-token.module';
 import { PrismaService } from './prisma/prisma.service';
 import { TeamModule } from './team/team.module';
 import { OtpModule } from './otp/otp.module';
@@ -27,7 +26,6 @@ import { NotificationsModule } from './mail/notifications/notifications.module';
       signOptions: { expiresIn: '1d' }, // '60s', '15m','1h', '7d', etc.
     }),
     // Les modules métiers...
-    GatewayTokenModule,
     TeamModule,
     // Module utilitaire
     OtpModule,
