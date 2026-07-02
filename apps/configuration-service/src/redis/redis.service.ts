@@ -28,6 +28,10 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  async upsert(key: string, value: string): Promise<void> {
+    await this.client.set(key, value, 'KEEPTTL');
+  }
+
   async del(key: string): Promise<void> {
     await this.client.del(key);
   }

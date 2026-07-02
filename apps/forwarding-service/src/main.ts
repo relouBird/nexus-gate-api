@@ -1,14 +1,15 @@
-/* Minimal SSL/non-SSL example */
-const uWS = require('uWebSockets.js');
-const PORT = 9006;
+import dotenv from 'dotenv';
+import Server from './server';
 
-const app = uWS.App();
+dotenv.config();
+const PORT = Number(process.env.PORT ?? 9006);
+const app = new Server(PORT);
 
 app.any('/*', (res, req) => {
-  console.log('================================');
+  console.log('');
   console.log('Method :', req.getMethod());
   console.log('Url    :', req.getUrl());
-  console.log('Query  :', req.getQuery());
+  console.log('Query  :', req.getQuery(),);
 
   req.forEach((key, value) => {
     console.log(`${key}: ${value}`);
@@ -28,11 +29,4 @@ app.any('/*', (res, req) => {
   });
 });
 
-app.listen(PORT, (token) => {
-  if (!token) {
-    console.log('Cannot listen');
-    return;
-  }
-
-  console.log(`Listening on http://localhost:${PORT}`);
-});
+app.start();

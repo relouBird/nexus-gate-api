@@ -476,25 +476,59 @@ export class ServerService {
     return identifier;
   }
 
+  private async syncGatewayTokenCache(tokenId: string) {
+    const result = await this.prisma.$transaction(async (tx) => {
+      const token = await tx.gatewayToken.findUnique({
+        where: { id: tokenId },
+        include: { scope: true },
+      });
+      if (!token) return { action: 'noop' as const };
+
+      if (token.scope.length === 0) {
+        if (!token.revoked) {
+          await tx.gatewayToken.update({
+            where: { id: tokenId },
+            data: { revoked: true },
+          });
+        }
+
+        return {
+          action: 'delete' as const,
+          tokenValue: token.value,
+        };
+      }
+
+      return {
+        action: 'upsert' as const,
+        tokenValue: token.value,
+        payload: {
+          id: token.id,
+          teamId: token.teamId,
+          userId: token.userId,
+          scopeServerIds: token.scope.map((s) => s.serverId),
+        },
+      };
+    });
+
+    if (result.action === 'delete') {
+      await this.redis.del(`gw:${result.tokenValue}`);
+      return;
+    }
+
+    if (result.action === 'upsert') {
+      await this.redis.upsert(
+        `gw:${result.tokenValue}`,
+        JSON.stringify(result.payload),
+      );
+    }
+  }
+
   private async invalidateFromGatewayTokenIds(tokenIds: GatewayTokenSAdd[]) {
-    // 4. Pour chaque token affecté : vérifier s'il est orphelin → révoquer + invalider Redis
     const affectedTokenIds = [
       ...new Set(tokenIds.map((j) => j.gatewayTokenId)),
     ];
     for (const tokenId of affectedTokenIds) {
-      const token = tokenIds.find(
-        (j) => j.gatewayTokenId === tokenId,
-      )!.gatewayToken;
-      const remaining = await this.prisma.gatewayTokenServer.count({
-        where: { gatewayTokenId: tokenId },
-      });
-      if (remaining === 0) {
-        await this.prisma.gatewayToken.update({
-          where: { id: tokenId },
-          data: { revoked: true },
-        });
-      }
-      await this.redis.del(`gw:${token.value}`);
+      await this.syncGatewayTokenCache(tokenId);
     }
   }
 

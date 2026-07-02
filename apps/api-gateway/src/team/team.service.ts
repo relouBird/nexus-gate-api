@@ -20,6 +20,14 @@ export class TeamService {
     });
   }
 
+  async updateTeam(body: any, requester: any) {
+    return this.dispatch({
+      pattern: AUTH_PATTERNS.TEAM_UPDATE,
+      payload: body,
+      requester,
+    });
+  }
+
   async deleteTeam(requester: any) {
     return this.dispatch({
       pattern: AUTH_PATTERNS.TEAM_DELETE,

@@ -40,6 +40,20 @@ export class TeamController {
 
   /**
    * =========================
+   * 🔰 ROUTE UPDATE
+   * =========================
+   * POST /team/update
+   * Permet de mettre à jour le compte equipe
+   * (ex: suppression refresh token, blacklist, etc.)
+   */
+  @HttpCode(HttpStatus.OK)
+  @Post('update')
+  update(@Request() req: AuthRequest, @Body() body: any) {
+    return this.teamService.updateTeam(body, req.user);
+  }
+
+  /**
+   * =========================
    * 🚪 ROUTE DELETE
    * =========================
    * POST /team/delete

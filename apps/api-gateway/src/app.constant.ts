@@ -17,6 +17,7 @@ export const AUTH_PATTERNS = {
   HELLO: 'hello.get',
 
   TEAM_REGISTER: 'team.register',
+  TEAM_UPDATE: 'team.update',
   TEAM_DELETE: 'team.delete',
 } as const;
 

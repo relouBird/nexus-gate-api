@@ -25,7 +25,7 @@ export class TeamController {
    */
   @MessagePattern(TEAM_PATTERNS.TEAM_UPDATE)
   updateMessage(@Payload() dto: UpdateTeamDto) {
-    return this.teamService.deleteTeam(dto);
+    return this.teamService.updateTeam(dto);
   }
 
   /**
