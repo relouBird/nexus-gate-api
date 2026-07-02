@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import Server from './server/Server';
+import Server from './server/ServerT';
 
 dotenv.config();
 const PORT = Number(process.env.PORT ?? 9006);
