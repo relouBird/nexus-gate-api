@@ -1,6 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ValidationPipe } from '@nestjs/common';
+import {
+  MicroserviceOptions,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -27,12 +31,24 @@ async function bootstrap() {
     },
   );
 
+  const loggerInstance = new Logger('AppService');
+
   // Validation globale des payloads RPC.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory: (errors) => {
+        const message = errors.flatMap((error) =>
+          Object.values(error.constraints ?? {}),
+        );
+        loggerInstance.error(message);
+        return new RpcException({
+          statusCode: 400,
+          message,
+        });
+      },
     }),
   );
 

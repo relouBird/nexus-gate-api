@@ -2,10 +2,15 @@
 // npm install --save-dev prisma dotenv
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
+import * as dotenv from 'dotenv';
 
+// charge explicitement le .env du service
+dotenv.config({
+  path: 'apps/auth-service/.env',
+  override: true,
+});
 
-console.log('AUTH-SERVICE:DATABASE_URL =', process.env.DATABASE_URL);
-
+console.log('DATABASE_URL =', process.env.DATABASE_URL);
 export default defineConfig({
   datasource: {
     url: process.env.DATABASE_URL,
