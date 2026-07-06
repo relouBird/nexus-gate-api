@@ -1,32 +1,23 @@
 import dotenv from 'dotenv';
-import Server from './server';
+import Server from './server/Server';
+import { bootstrap } from './bootstrap';
 
-dotenv.config();
+// charge explicitement le .env du service
+dotenv.config({
+  path: 'apps/forwarding-service/.env',
+  override: true,
+});
+
+// Création du serveur et du pipeline de traitement des requêtes
 const PORT = Number(process.env.PORT ?? 9006);
 const app = new Server(PORT);
 
-app.any('/*', (res, req) => {
-  console.log('');
-  console.log('Method :', req.getMethod());
-  console.log('Url    :', req.getUrl());
-  console.log('Query  :', req.getQuery(),);
-
-  req.forEach((key, value) => {
-    console.log(`${key}: ${value}`);
-  });
-
-  res.cork(() => {
-    res.writeStatus('200 OK');
-    res.writeHeader('Content-Type', 'application/json');
-    res.end(
-      JSON.stringify({
-        success: true,
-        method: req.getMethod(),
-        url: req.getUrl(),
-        query: req.getQuery(),
-      }),
-    );
-  });
+// Gère la connexion aux services externes (Redis, DB)
+// Gère la création du pipeline de traitement des requêtes
+bootstrap(app).catch((err) => {
+  console.error('[Bootstrap] failed:', err);
+  process.exit(1);
 });
 
+// Démarrage du serveur HTTP
 app.start();

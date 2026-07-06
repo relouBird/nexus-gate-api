@@ -1,8 +1,9 @@
 import uWS from 'uWebSockets.js';
+import { UWSHttpRequest, UWSHttpResponse } from '../types/server.type';
 
 export type RouteHandler = (
-  res: uWS.HttpResponse,
-  req: uWS.HttpRequest,
+  res: UWSHttpResponse,
+  req: UWSHttpRequest,
 ) => void;
 
 export default class Server {
