@@ -11,6 +11,7 @@ import {
   RevokeServerDto,
   GrantServerDto,
   HeaderServerDto,
+  ToggleTunnelServerDto,
 } from './server.dto';
 import { AccessPolicyDto } from 'apps/user-service/src/user/dto/access-policy.dto';
 import { RedisService } from '../redis/redis.service';
@@ -20,7 +21,11 @@ import {
   policyAfterGrant,
   policyAfterRevoke,
 } from '../utils/policy.util';
-import { GatewayTokenServer } from '../generated/prisma-client';
+import {
+  GatewayTokenServer,
+  ServerType,
+  TunnelSession,
+} from '../generated/prisma-client';
 
 export type GatewayTokenSAdd = {
   gatewayToken: {
@@ -63,6 +68,21 @@ export class ServerService {
         },
       });
 
+      let tunnel: TunnelSession | null = null;
+
+      if (server.type == ServerType.LOCAL) {
+        tunnel = await this.prisma.tunnelSession.create({
+          data: {
+            server: {
+              connect: {
+                id: server.id,
+              },
+            },
+            isActive: true,
+          },
+        });
+      }
+
       // 3. Trouver les tokens "illimités" = scope couvre exactement tous les serveurs existants
       if (existingIds.length > 0) {
         const candidates = await this.prisma.gatewayToken.findMany({
@@ -92,7 +112,7 @@ export class ServerService {
         }
       }
       return {
-        server,
+        server: { ...server, tunnelSession: tunnel },
         message: 'Server créé avec succès...',
       };
     } catch (error: any) {
@@ -112,6 +132,7 @@ export class ServerService {
 
       const data = await this.prisma.server.findMany({
         where: { teamId: requester.teamId },
+        include: { tunnelSession: true },
       });
 
       return {
@@ -138,6 +159,7 @@ export class ServerService {
 
       const server = await this.prisma.server.findFirst({
         where: { id, teamId: requester.teamId },
+        include: { tunnelSession: true },
       });
       if (!server)
         throw new RpcException({
@@ -272,6 +294,44 @@ export class ServerService {
         message: requireToken
           ? 'Authentification activée sur ce Serveur.'
           : 'Authentification désactivée sur ce Serveur.',
+      };
+    } catch (error: any) {
+      if (error instanceof RpcException) throw error;
+      this.logger.error(
+        `Server-TokenAuth failed: ${error.message}`,
+        error.stack,
+      );
+      throw new RpcException({
+        statusCode: 500,
+        message: 'Erreur lors de la mise à jour du requireToken',
+      });
+    }
+  }
+
+  async toggleTunnelState(dto: ToggleTunnelServerDto) {
+    try {
+      const { requester, id, isActive } = dto;
+      this.logger.log(`Message received SERVER-TOKEN-AUTH: (${id})`);
+
+      const server = await this.prisma.server.findFirst({
+        where: { id, teamId: requester.teamId },
+      });
+      if (!server)
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Serveur introuvable',
+        });
+
+      const updated = await this.prisma.tunnelSession.update({
+        where: { serverId: id },
+        data: { isActive },
+      });
+
+      return {
+        server: { ...server, tunnelSession: updated },
+        message: isActive
+          ? 'Tunnel lancé sur ce Serveur.'
+          : 'Tunnel désactivée sur ce Serveur.',
       };
     } catch (error: any) {
       if (error instanceof RpcException) throw error;

@@ -24,6 +24,8 @@ import Server from './server/Server';
 import { handleError } from './server/handleError';
 import { buildContext } from './server/RequestParser';
 import { readBody } from './server/BodyParser';
+import { TunnelManager } from './tunnel/TunnelManager';
+import { createTunnelGateway } from './tunnel/TunnelGateway';
 
 dotenv.config();
 
@@ -48,11 +50,14 @@ export async function bootstrap(server: Server) {
   const gatewayTokenRepo = new GatewayTokenRepository(redis);
   const logQueue = new LogQueue(db);
 
+  // Le gestionnaire de tunnel
+  const tunnelManager = new TunnelManager();
+
   const pipeline = new Pipeline()
     .use(resolveServer(serverRepo))
     .use(authenticate(gatewayTokenRepo))
     .use(evaluateRules(redis))
-    .use(proxyRequest())
+    .use(proxyRequest(tunnelManager))
     .finally(logRequest(logQueue));
 
   // le Server et le Pipeline recevront redis/db par injection manuelle
@@ -105,6 +110,8 @@ export async function bootstrap(server: Server) {
       );
     });
   });
+
+  server.ws('/tunnel', createTunnelGateway(tunnelManager, db));
 
   process.on('SIGTERM', async () => {
     await logQueue.shutdown();

@@ -72,6 +72,17 @@ export class ConfigurationService {
     });
   }
 
+  updateToggleServer(id: string, dto: any, requester: any) {
+    return this.dispatch({
+      pattern: CONFIGURATION_PATTERNS.SERVER_TOGGLE_TUNNEL,
+      payload: {
+        id,
+        ...dto,
+      },
+      requester,
+    });
+  }
+
   setHeaders(id: string, dto: any, requester: any) {
     return this.dispatch({
       pattern: CONFIGURATION_PATTERNS.SERVER_SET_HEADER,

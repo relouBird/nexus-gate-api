@@ -12,6 +12,18 @@ export class HttpError extends Error {
   }
 }
 
+export class TunnelUnavailableError extends Error {
+  constructor(public status: number = 503) {
+    super('Tunnel non disponible : desktop non connecté');
+  }
+}
+
+export class TunnelTimeoutError extends Error {
+  constructor(public status: number = 504) {
+    super('Tunnel timeout : pas de réponse du desktop');
+  }
+}
+
 export function handleError(ctx: RequestContext, err: unknown): void {
   if (ctx.aborted) return; // client déjà parti, inutile de répondre
 
