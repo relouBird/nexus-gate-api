@@ -102,6 +102,21 @@ export class ConfigurationController {
   }
 
   /**
+   * PATCH /configuration/servers/:id/toggle-tunnel
+   * Active/Désactive l'état du tunnel
+   */
+  @HttpCode(HttpStatus.OK)
+  @Patch('servers/:id/toggle-tunnel')
+  toggleTunnelState(
+    @Request() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() dto: any,
+  ) {
+    this.validateRequestBody(dto);
+    return this.configurationService.updateToggleServer(id, dto, req.user);
+  }
+
+  /**
    * PATCH /configuration/servers/:id/set-headers
    * Mettre à jour les headers
    */

@@ -112,6 +112,24 @@ export class TokenAuthServerDto {
 }
 
 // ───────────────────────────────────────────────────────────────
+// ─── ADD TOGGLE TUNNEL ─────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────
+
+export class ToggleTunnelServerDto {
+  @IsNotEmpty()
+  @IsString()
+  id!: string;
+
+  @IsBoolean()
+  isActive!: boolean;
+
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AuthContextDto)
+  requester!: AuthContextDto;
+}
+
+// ───────────────────────────────────────────────────────────────
 // ─── ADD HEADER SERVER ───────────────────────────────────────────
 // ───────────────────────────────────────────────────────────────
 
