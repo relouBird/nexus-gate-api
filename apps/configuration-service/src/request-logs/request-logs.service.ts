@@ -118,7 +118,7 @@ export class RequestLogsService {
 
       // ─── Requête DB ───────────────────────────────────────────────
 
-      const [logs, total] = await Promise.all([
+      const [logs, total, servers] = await Promise.all([
         this.prisma.requestLog.findMany({
           where,
           skip,
@@ -126,13 +126,21 @@ export class RequestLogsService {
           orderBy: { timestamp: 'desc' }, // plus récent en premier
         }),
         this.prisma.requestLog.count({ where }),
+        this.prisma.server.findMany({
+          where: { id: { in: resolvedServerIds } },
+          select: { id: true, name: true },
+        }),
       ]);
 
       const totalPages = Math.ceil(total / limit);
 
       return {
         success: true,
-        data: logs,
+        data: logs.map((log) => ({
+          ...log,
+          id: log.id,
+          serverName: servers.find((s) => s.id === log.serverId)?.name ?? null,
+        })),
         pagination: {
           total,
           page,

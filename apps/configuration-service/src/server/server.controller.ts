@@ -11,6 +11,7 @@ import {
   RevokeServerDto,
   GrantServerDto,
   HeaderServerDto,
+  ToggleTunnelServerDto,
 } from './server.dto';
 
 @Controller()
@@ -45,6 +46,11 @@ export class ServerController {
   @MessagePattern(CONFIGURATION_PATTERNS.SERVER_TOKEN_AUTH)
   toggleTokenAuth(@Payload() dto: TokenAuthServerDto) {
     return this.serverService.toggleTokenAuth(dto);
+  }
+
+  @MessagePattern(CONFIGURATION_PATTERNS.SERVER_TOGGLE_TUNNEL)
+  toggleTunnel(@Payload() dto: ToggleTunnelServerDto) {
+    return this.serverService.toggleTunnelState(dto);
   }
 
   @MessagePattern(CONFIGURATION_PATTERNS.SERVER_SET_HEADER)
