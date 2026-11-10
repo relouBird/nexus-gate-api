@@ -1,98 +1,120 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Nexus Gate API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Nexus Gate est un backend en cours de développement pour gérer des équipes, des utilisateurs et des serveurs, puis acheminer des requêtes vers ces serveurs. Le dépôt regroupe une API HTTP, des microservices NestJS et un service de forwarding autonome.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> **État du projet :** la documentation décrit l’état du code présent dans ce dépôt. La configuration de démarrage et le package de base de données doivent encore être consolidés avant de considérer le projet prêt pour un lancement reproductible. Voir [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
-## Description
+## Architecture
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Composant | Rôle observé |
+| --- | --- |
+| `api-gateway` | API HTTP NestJS, documentation Swagger, authentification et routage des requêtes vers les microservices TCP. |
+| `auth-service` | Authentification, équipes, sessions, OTP et notifications par courriel. |
+| `user-service` | Gestion des utilisateurs et du profil courant. |
+| `configuration-service` | Gestion des serveurs, règles, jetons de gateway et journaux de requêtes. |
+| `forwarding-service` | Serveur autonome basé sur `uWebSockets.js` : résolution du serveur, authentification par jeton, évaluation des règles, proxy et tunnels WebSocket. |
+| Redis | Cache utilisé par certains composants. Le fichier Docker Compose ne démarre que Redis. |
+| MariaDB | Base utilisée par Prisma et son adaptateur MariaDB. Elle doit être fournie séparément. |
 
-## Project setup
+Les quatre services NestJS et le service de forwarding ne suivent pas tous le même mode de démarrage. Le forwarding est compilé avec son propre `tsconfig.json` et ne figure pas comme projet dans [nest-cli.json](./nest-cli.json).
 
-```bash
-$ npm install
+## Structure
+
+```text
+apps/
+  api-gateway/
+  auth-service/
+  user-service/
+  configuration-service/
+  forwarding-service/
+docker-compose.yaml
+package.json
 ```
 
-## Compile and run the project
+Chaque service de données contient actuellement son propre schéma Prisma et son répertoire de migrations. Les quatre schémas suivis dans Git sont identiques; cela ne signifie pas que leurs historiques de migration ou leurs bases sont synchronisés.
+
+## Prérequis
+
+- Node.js et npm compatibles avec les versions des dépendances déclarées dans [package.json](./package.json).
+- MariaDB accessible depuis les services qui utilisent Prisma.
+- Docker Desktop si Redis est lancé avec Docker Compose.
+
+Le NestJS CLI est installé comme dépendance du projet; une installation globale n’est pas nécessaire.
+
+## Installation
+
+Depuis la racine du dépôt :
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm ci
 ```
 
-## Run tests
+Créer les fichiers `.env` locaux attendus par les services sous `apps/<service>/.env`. Ils ne sont pas suivis par Git. Les services Prisma utilisent `DATABASE_HOST`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD` à l’exécution; les commandes Prisma lisent également `DATABASE_URL`. Configurer aussi les ports des services, les variables Redis et les paramètres de courriel selon les composants utilisés.
+
+> La configuration actuelle des ports n’est pas cohérente entre la gateway et les microservices. Consulter [PROJECT-STATUS.md](./PROJECT-STATUS.md) avant de tenter un démarrage complet.
+
+## Redis et base de données
+
+Démarrer Redis :
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Arrêter Redis :
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose down
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+`docker-compose.yaml` ne fournit ni MariaDB ni les bases de données du projet. Les bases doivent être créées/configurées séparément. Ne pas lancer une commande de réinitialisation Prisma sur une base contenant des données à conserver.
 
-## Resources
+## Prisma
 
-Check out a few resources that may come in handy when working with NestJS:
+Exemple de commandes Prisma pour `auth-service` :
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run db:auth:generate
+npm run db:auth:format
+npm run db:auth:migrate
+npm run db:auth:studio
+```
 
-## Support
+Les mêmes familles de scripts existent pour `user`, `configuration` et `forwarding`. Les commandes `db:<service>:reset` réinitialisent la base concernée et peuvent supprimer ses données.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Les clients Prisma sont générés dans les dossiers `src/generated` des services, lesquels sont ignorés par Git. Il faut donc générer le client après l’installation et après toute modification de schéma. L’intégration du client centralisé attendu par le forwarding n’est pas encore présente dans les fichiers versionnés; détails et précautions dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
-## Stay in touch
+## Démarrage et scripts utiles
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Scripts de développement déclarés dans `package.json` :
 
-## License
+```bash
+npm run start:gateway
+npm run start:auth-service
+npm run start:user-service
+npm run start:configuration-service
+npm run start:forwarding-service
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Chaque processus se lance séparément. Les scripts ne garantissent pas à eux seuls une configuration fonctionnelle : vérifier les variables d’environnement et les réserves de démarrage avant de les lancer.
+
+Autres commandes :
+
+```bash
+npm run build
+npm test
+npm run test:e2e
+npm run test:cov
+```
+
+Le script `test:e2e` utilise la configuration du gateway uniquement.
+
+## API
+
+La gateway applique le préfixe global `/api` et configure Swagger à l’adresse prévue `/api/docs`. Les contrôleurs exposent notamment des routes d’authentification, de gestion des équipes et utilisateurs, ainsi que de configuration des serveurs, règles, jetons et journaux. Le port HTTP effectivement utilisé dépend toutefois de la configuration actuelle de `apps/api-gateway/src/main.ts`; voir les points à corriger dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+
+## Documentation complémentaire
+
+- [READCOMMAND.md](./READCOMMAND.md) — aide-mémoire des commandes présentes dans `package.json`.
+- [READNOTE.md](./READNOTE.md) — origine des notes de travail et état du projet de package de base de données.
+- [PROJECT-STATUS.md](./PROJECT-STATUS.md) — constats vérifiés, limites et décisions restant à prendre.
