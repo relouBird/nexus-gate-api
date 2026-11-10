@@ -13,3 +13,4 @@ export const evalIpWhitelist: RuleEvaluator = async (rule, input) => {
   // Note : "whitelist" ici veut dire "matches si PAS dans la liste" → à combiner
   // avec action=ALLOW côté config. Voir remarque sémantique plus bas.
 };
+

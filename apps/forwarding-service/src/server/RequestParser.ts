@@ -5,6 +5,7 @@ import type {
   UWSHttpResponse,
   UWSHttpRequest,
 } from '../types/server.type';
+import { normalizeIp } from '../utils/rule.util';
 
 export function parseRoute(url: string): ParsedRoute {
   // url = "/users-api/v1/users/42"
@@ -26,9 +27,10 @@ export function extractHeaders(req: UWSHttpRequest): Record<string, string> {
 
 export function extractIp(res: UWSHttpResponse): string {
   // getProxiedRemoteAddressAsText() si tu es derrière un reverse proxy/LB
-  // avec forwarding activé côté uWS ; sinon getRemoteAddressAsText().
+
   const buf = res.getRemoteAddressAsText();
-  return Buffer.from(buf).toString('utf-8');
+  const raw = Buffer.from(buf).toString('utf-8');
+  return normalizeIp(raw);
 }
 
 /**

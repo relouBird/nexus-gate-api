@@ -1,17 +1,24 @@
 // rules/ipUtils.ts
 
 function ipToInt(ip: string): number {
-  const parts = ip.trim().split('.').map((n) => Number(n));
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+  const parts = ip
+    .trim()
+    .split('.')
+    .map((n) => Number(n));
+  if (
+    parts.length !== 4 ||
+    parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)
+  ) {
     throw new Error(`Invalid IPv4 address: ${ip}`);
   }
 
   return (
-    ((parts[0] << 24) >>> 0) +
-    ((parts[1] << 16) >>> 0) +
-    ((parts[2] << 8) >>> 0) +
-    (parts[3] >>> 0)
-  ) >>> 0;
+    (((parts[0] << 24) >>> 0) +
+      ((parts[1] << 16) >>> 0) +
+      ((parts[2] << 8) >>> 0) +
+      (parts[3] >>> 0)) >>>
+    0
+  );
 }
 
 function parseCidr(cidr: string): { start: number; end: number } {
@@ -61,4 +68,24 @@ export function isIpInRange(ip: string, range: string): boolean {
   const target = ipToInt(ip);
   const { start, end } = parseIpRange(range);
   return target >= start && target <= end;
+}
+
+export function normalizeIp(ip: string): string {
+  const shortMatch = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (shortMatch) return shortMatch[1];
+
+  const longMatch = ip.match(
+    /^0000:0000:0000:0000:0000:ffff:([0-9a-f]{4}):([0-9a-f]{4})$/i,
+  );
+  if (longMatch) {
+    const hi = parseInt(longMatch[1], 16);
+    const lo = parseInt(longMatch[2], 16);
+    const a = (hi >> 8) & 0xff,
+      b = hi & 0xff;
+    const c = (lo >> 8) & 0xff,
+      d = lo & 0xff;
+    return `${a}.${b}.${c}.${d}`;
+  }
+
+  return ip;
 }

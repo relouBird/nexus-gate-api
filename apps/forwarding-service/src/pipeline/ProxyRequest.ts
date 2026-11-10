@@ -7,6 +7,7 @@ import {
   TunnelUnavailableError,
 } from '../server/handleError';
 import { TunnelManager } from '../tunnel/TunnelManager';
+import { setHeaderOnMap } from '../utils/socket.util';
 
 export const proxyRequest =
   (tunnelManager: TunnelManager): Middleware =>

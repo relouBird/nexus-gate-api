@@ -8,7 +8,7 @@ const HOP_BY_HOP = new Set([
   'upgrade',
 ]);
 
-const setHeaderOnMap = (
+export const setHeaderOnMap = (
   toFiltersHeaders: Record<string, string | string[] | undefined>,
 ) => {
   const headers: Record<string, string> = {};
