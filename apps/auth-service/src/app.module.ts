@@ -7,7 +7,7 @@ import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
 import { TeamModule } from './team/team.module';
 import { OtpModule } from './otp/otp.module';
-import { RedisModule } from './redis/redis.module';
+import { RedisCacheModule } from '@nexus/redis-cache';
 import { NotificationsModule } from './mail/notifications/notifications.module';
 import {
   ConfigurationModule,
@@ -31,7 +31,7 @@ import {
     TeamModule,
     // Module utilitaire
     OtpModule,
-    RedisModule,
+    RedisCacheModule,
     NotificationsModule,
   ],
   controllers: [AppController],

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { RedisModule } from '../redis/redis.module';
+import { RedisCacheModule } from '@nexus/redis-cache';
 import { ClientsGatewayModule } from '../clients-gateway/clients-gateway.module';
 
 import { AuthService } from './auth.service';
@@ -11,7 +11,7 @@ import { ServiceConfiguration } from '@nexus/configuration';
 
 @Module({
   imports: [
-    RedisModule,
+    RedisCacheModule,
     ClientsGatewayModule,
     JwtModule.registerAsync({
       global: true,

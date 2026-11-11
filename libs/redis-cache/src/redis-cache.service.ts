@@ -1,13 +1,12 @@
-// redis.service.ts
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ServiceConfiguration } from '@nexus/configuration';
 import Redis from 'ioredis';
 
 @Injectable()
-export class RedisService implements OnModuleDestroy {
+export class RedisCacheService implements OnModuleDestroy {
   private readonly client: Redis;
 
-  constructor(private configuration: ServiceConfiguration) {
+  constructor(private readonly configuration: ServiceConfiguration) {
     this.client = new Redis({
       port: this.configuration.getSharedNumber('REDIS_PORT', 6379),
       host: this.configuration.getShared('REDIS_HOST', 'localhost'),
@@ -21,7 +20,10 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds) {
+    if (ttlSeconds !== undefined) {
+      if (!Number.isSafeInteger(ttlSeconds) || ttlSeconds <= 0) {
+        throw new RangeError('Redis TTL must be a positive integer');
+      }
       await this.client.set(key, value, 'EX', ttlSeconds);
     } else {
       await this.client.set(key, value);
@@ -36,7 +38,7 @@ export class RedisService implements OnModuleDestroy {
     await this.client.del(key);
   }
 
-  onModuleDestroy() {
+  onModuleDestroy(): void {
     this.client.disconnect();
   }
 }

@@ -32,7 +32,7 @@ npm run start:configuration-service
 npm run start:forwarding-service
 ```
 
-La librairie `@nexus/configuration` charge `.env.global` pour les services NestJS et leur fournit les variables de leur namespace (`API_GATEWAY_*`, `AUTH_SERVICE_*`, `USER_SERVICE_*` ou `CONFIGURATION_SERVICE_*`) ainsi que les variables partagées `SHARED_*`. Le service de forwarding reste en Node.js autonome et lit le même fichier avec `dotenv`, sans dépendre de Nest.
+La librairie `@nexus/configuration` charge `.env.global` pour les services NestJS et leur fournit les variables de leur namespace (`API_GATEWAY_*`, `AUTH_SERVICE_*`, `USER_SERVICE_*` ou `CONFIGURATION_SERVICE_*`) ainsi que les variables partagées `SHARED_*`. `@nexus/redis-cache` réutilise `ServiceConfiguration` et ne lit que les paramètres partagés Redis. Le service de forwarding reste en Node.js autonome et lit le même fichier avec `dotenv`, sans dépendre des librairies Nest.
 
 ## Génération d’une librairie NestJS
 
@@ -77,4 +77,4 @@ npm test
 npm run test:e2e
 ```
 
-`npm run build` compile séquentiellement la librairie `configuration` et les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.
+`npm run build` compile séquentiellement les librairies `configuration` et `redis-cache`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.

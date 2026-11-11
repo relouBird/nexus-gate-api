@@ -12,7 +12,7 @@ import {
   AuthContext,
   AuthRequest,
 } from '../common/interfaces/auth-context.interface';
-import { RedisService } from '../redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 import { ServiceConfiguration } from '@nexus/configuration';
 
 @Injectable()

@@ -11,7 +11,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserService } from './user/user.service';
 import { AuthContextDto } from './common/interfaces/auth-context.dto';
 import { NotificationsService } from './mail/notifications/notifications.service';
-import { RedisService } from './redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 @Injectable()
 export class AppService {

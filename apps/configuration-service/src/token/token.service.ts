@@ -8,7 +8,7 @@ import {
   RemoveGatewayTokenDto,
 } from './token.dto';
 import { AccessPolicy, canUserAccess } from '../utils/policy.util';
-import { RedisService } from '../redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 const DEFAULT_TTL = 30 * 24 * 60 * 60; // 30 jours en secondes
 

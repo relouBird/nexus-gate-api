@@ -15,6 +15,8 @@
     "paths": {
       "@nexus/configuration": ["libs/configuration/src/index.ts"],
       "@nexus/configuration/*": ["libs/configuration/src/*"],
+      "@nexus/redis-cache": ["libs/redis-cache/src/index.ts"],
+      "@nexus/redis-cache/*": ["libs/redis-cache/src/*"],
       "src/*": ["./src/*"]
     },
     "incremental": true,

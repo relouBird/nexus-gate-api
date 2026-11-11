@@ -11,15 +11,6 @@
   "monorepo": true,
   "root": "apps/api-gateway",
   "projects": {
-    "configuration": {
-      "type": "library",
-      "root": "libs/configuration",
-      "entryFile": "index",
-      "sourceRoot": "libs/configuration/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/configuration/tsconfig.lib.json"
-      }
-    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",
@@ -38,6 +29,15 @@
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
       }
     },
+    "configuration": {
+      "type": "library",
+      "root": "libs/configuration",
+      "entryFile": "index",
+      "sourceRoot": "libs/configuration/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/configuration/tsconfig.lib.json"
+      }
+    },
     "configuration-service": {
       "type": "application",
       "root": "apps/configuration-service",
@@ -45,6 +45,15 @@
       "sourceRoot": "apps/configuration-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/configuration-service/tsconfig.app.json"
+      }
+    },
+    "redis-cache": {
+      "type": "library",
+      "root": "libs/redis-cache",
+      "entryFile": "index",
+      "sourceRoot": "libs/redis-cache/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/redis-cache/tsconfig.lib.json"
       }
     },
     "user-service": {

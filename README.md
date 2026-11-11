@@ -2,7 +2,7 @@
 
 Nexus Gate est un backend en cours de développement pour gérer des équipes, des utilisateurs et des serveurs, puis acheminer des requêtes vers ces serveurs. Le dépôt regroupe une API HTTP, des microservices NestJS et un service de forwarding autonome.
 
-> **État du projet :** la configuration NestJS est centralisée dans la librairie `@nexus/configuration` et les services lisent un fichier commun `.env.global`. Les réserves de déploiement restantes, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+> **État du projet :** la configuration NestJS est centralisée dans `@nexus/configuration`, et les services Nest partagent le client Redis de `@nexus/redis-cache`. Les services lisent un fichier commun `.env.global`. Les réserves de déploiement restantes, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## Architecture
 
@@ -13,7 +13,7 @@ Nexus Gate est un backend en cours de développement pour gérer des équipes, d
 | `user-service` | Gestion des utilisateurs et du profil courant. |
 | `configuration-service` | Gestion des serveurs, règles, jetons de gateway et journaux de requêtes. |
 | `forwarding-service` | Serveur autonome basé sur `uWebSockets.js` : résolution du serveur, authentification par jeton, évaluation des règles, proxy et tunnels WebSocket. |
-| Redis | Cache utilisé par certains composants. Le fichier Docker Compose ne démarre que Redis. |
+| Redis | Cache des applications NestJS via `@nexus/redis-cache`; le forwarding conserve son client autonome. Le fichier Docker Compose ne démarre que Redis. |
 | MariaDB | Base utilisée par Prisma et son adaptateur MariaDB. Elle doit être fournie séparément. |
 
 Les quatre services NestJS et le service de forwarding ne suivent pas tous le même mode de démarrage. Le forwarding est compilé avec son propre `tsconfig.json` et ne figure pas comme projet dans [nest-cli.json](./nest-cli.json).
@@ -58,6 +58,8 @@ if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
 Modifier `.env.global` et remplacer les valeurs d’exemple, notamment les identifiants MariaDB et `SHARED_JWT_SECRET`. Ne pas recopier le modèle par-dessus un fichier existant : `.env.global` contient les secrets locaux et est ignoré par Git. Sa configuration est lue depuis la racine du dépôt (`process.cwd()`); lancer les commandes npm depuis cette racine. Dans le clone de travail actuel, les réglages des cinq anciens fichiers `apps/*/.env` ont été transférés dans `.env.global`; ils ne sont pas inclus dans le dépôt. Sur un nouveau clone, créer le fichier à partir du modèle.
 
 La librairie NestJS `@nexus/configuration` fournit `ConfigurationModule.forRoot('<service>')` et `ServiceConfiguration`. Elle ne permet à chaque service Nest d’accéder qu’aux clés de son propre préfixe et aux clés partagées `SHARED_*`. Le service de forwarding reste indépendant de NestJS et lit directement le même fichier avec `dotenv`.
+
+La librairie `@nexus/redis-cache` est enregistrée par les applications Nest et injecte le `ServiceConfiguration` fourni par `@nexus/configuration`. Elle ne lit que les paramètres partagés `SHARED_REDIS_*`; les paramètres propres à l’application importatrice n’affectent pas le client Redis. Le forwarding garde son implémentation indépendante.
 
 Cette séparation est logique dans le code, pas une frontière de sécurité entre processus : tous les processus ayant accès au même `.env.global` peuvent lire les secrets qu’il contient. En production, injecter à chaque processus uniquement les secrets dont il a besoin.
 
@@ -115,7 +117,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-`npm run build` compile séquentiellement la librairie de configuration et les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
+`npm run build` compile séquentiellement les librairies de configuration et Redis, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
 
 ## API
 

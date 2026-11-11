@@ -3,6 +3,7 @@
 ## Configuration centralisée
 
 - La librairie NestJS `@nexus/configuration` se trouve dans `libs/configuration`. Les quatre applications NestJS la chargent avec `ConfigurationModule.forRoot('<application>')` et utilisent `ServiceConfiguration`.
+- La librairie NestJS `@nexus/redis-cache` centralise le client Redis partagé des quatre applications NestJS. Elle injecte `ServiceConfiguration` et n’accède qu’aux méthodes `getShared*` (`SHARED_REDIS_*`); elle ne dépend donc pas des clés namespacées de l’application importatrice.
 - `ServiceConfiguration` ne retourne que les clés préfixées pour l’application enregistrée, plus les clés partagées demandées explicitement via `getShared`. `ConfigService` n’est pas exporté comme service global.
 - Les noms de services sont `api-gateway`, `auth-service`, `user-service` et `configuration-service`; leurs clés commencent respectivement par `API_GATEWAY_`, `AUTH_SERVICE_`, `USER_SERVICE_` et `CONFIGURATION_SERVICE_`.
 - Les cinq fichiers locaux `apps/*/.env` ont été migrés vers `.env.global`, puis supprimés. Le fichier global réel est ignoré par Git et ne sera pas fourni dans un nouveau clone; les configurations Prisma utilisent ses URL namespacées. Le forwarding, qui n’est pas NestJS, lit aussi ce fichier directement avec `dotenv`.
@@ -17,14 +18,14 @@
 - Le forwarding ne dépend pas de la librairie NestJS, comme souhaité, mais il dépend encore de `@nexus/database/prisma-client`. Le code source et le package database ne sont pas inclus/reproductibles dans un clone propre : `packages/` est exclu par `.gitignore`, et le `node_modules/@nexus/database` présent précédemment dans le clone était une jonction locale non déclarée par npm.
 - Le script `db:forwarding:generate-copy` pointe vers `apps/forwarding-service/prisma.copy.ts`, qui n’existe pas.
 - Les quatre schémas Prisma source sont identiques, mais les historiques de migration diffèrent. Les historiques d’auth et user s’arrêtent à une ancienne migration initiale; ceux de configuration et forwarding incluent des migrations ultérieures. Les bases réelles et leur historique doivent être audités avant de migrer, réinitialiser ou centraliser les modèles. Ne pas lancer `migrate reset` sur une base à préserver.
-- Les implémentations Redis existent encore séparément dans plusieurs services. La librairie de configuration les alimente avec les mêmes variables `SHARED_REDIS_*`; la mutualisation du client Redis n’est pas comprise dans cette branche.
+- Le forwarding conserve sa propre implémentation Redis, hors des librairies NestJS, comme convenu. Il lit lui aussi `SHARED_REDIS_*` directement depuis l’environnement après chargement de `.env.global`.
 - Docker Compose démarre seulement Redis. MariaDB et les bases nommées dans `.env.global.example` doivent être fournies séparément.
 - Les valeurs d’environnement du fichier sont lues depuis la racine du dépôt (`process.cwd()`). Lancer les scripts npm et Prisma depuis cette racine.
 - Le chargement depuis `.env.global` ne remplace pas les variables déjà fournies par le système; les variables d’environnement de déploiement ont donc priorité.
 
 ## Validation
 
-`npm run build` compile séquentiellement la librairie de configuration et les quatre applications NestJS. Pour compiler un seul projet NestJS :
+`npm run build` compile séquentiellement les librairies de configuration et Redis, puis les quatre applications NestJS. Pour compiler un seul projet NestJS :
 
 ```powershell
 npx nest build <nom-du-projet>
