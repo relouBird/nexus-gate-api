@@ -1,19 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ApiGatewayModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import {
+  loadGlobalEnvironment,
+  readServiceEnvironmentNumber,
+} from '@nexus/configuration';
 
 async function bootstrap() {
+  loadGlobalEnvironment();
+  const port = readServiceEnvironmentNumber('api-gateway', 'HTTP_PORT', 9002);
   const app = await NestFactory.create(ApiGatewayModule);
-
-  // Charger .env du service
-  dotenv.config({
-    path: path.resolve(__dirname, '../../api-gateway/.env'),
-    override: true,
-  });
-
-  const PORT = Number(process.env.port);
 
   // Ajouter cette ligne pour préfixer toutes les routes avec /api
   app.setGlobalPrefix('api');
@@ -45,7 +41,7 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/api/docs', app, documentFactory);
 
-  await app.listen(PORT ?? 9002);
-  console.log(`🚀 API GATEWAY IS RUNNING ON: http://localhost:${PORT}`);
+  await app.listen(port);
+  console.log(`🚀 API GATEWAY IS RUNNING ON: http://localhost:${port}`);
 }
 bootstrap();

@@ -2,7 +2,7 @@
 
 Nexus Gate est un backend en cours de développement pour gérer des équipes, des utilisateurs et des serveurs, puis acheminer des requêtes vers ces serveurs. Le dépôt regroupe une API HTTP, des microservices NestJS et un service de forwarding autonome.
 
-> **État du projet :** la documentation décrit l’état du code présent dans ce dépôt. La configuration de démarrage et le package de base de données doivent encore être consolidés avant de considérer le projet prêt pour un lancement reproductible. Voir [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+> **État du projet :** la configuration NestJS est centralisée dans la librairie `@nexus/configuration` et les services lisent un fichier commun `.env.global`. Les réserves de déploiement restantes, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## Architecture
 
@@ -49,9 +49,17 @@ Depuis la racine du dépôt :
 npm ci
 ```
 
-Créer les fichiers `.env` locaux attendus par les services sous `apps/<service>/.env`. Ils ne sont pas suivis par Git. Les services Prisma utilisent `DATABASE_HOST`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD` à l’exécution; les commandes Prisma lisent également `DATABASE_URL`. Configurer aussi les ports des services, les variables Redis et les paramètres de courriel selon les composants utilisés.
+Créer le fichier commun d’environnement à partir du modèle :
 
-> La configuration actuelle des ports n’est pas cohérente entre la gateway et les microservices. Consulter [PROJECT-STATUS.md](./PROJECT-STATUS.md) avant de tenter un démarrage complet.
+```powershell
+if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
+```
+
+Modifier `.env.global` et remplacer les valeurs d’exemple, notamment les identifiants MariaDB et `SHARED_JWT_SECRET`. Ne pas recopier le modèle par-dessus un fichier existant : `.env.global` contient les secrets locaux et est ignoré par Git. Sa configuration est lue depuis la racine du dépôt (`process.cwd()`); lancer les commandes npm depuis cette racine. Dans le clone de travail actuel, les réglages des cinq anciens fichiers `apps/*/.env` ont été transférés dans `.env.global`; ils ne sont pas inclus dans le dépôt. Sur un nouveau clone, créer le fichier à partir du modèle.
+
+La librairie NestJS `@nexus/configuration` fournit `ConfigurationModule.forRoot('<service>')` et `ServiceConfiguration`. Elle ne permet à chaque service Nest d’accéder qu’aux clés de son propre préfixe et aux clés partagées `SHARED_*`. Le service de forwarding reste indépendant de NestJS et lit directement le même fichier avec `dotenv`.
+
+Cette séparation est logique dans le code, pas une frontière de sécurité entre processus : tous les processus ayant accès au même `.env.global` peuvent lire les secrets qu’il contient. En production, injecter à chaque processus uniquement les secrets dont il a besoin.
 
 ## Redis et base de données
 
@@ -67,7 +75,7 @@ Arrêter Redis :
 docker compose down
 ```
 
-`docker-compose.yaml` ne fournit ni MariaDB ni les bases de données du projet. Les bases doivent être créées/configurées séparément. Ne pas lancer une commande de réinitialisation Prisma sur une base contenant des données à conserver.
+`docker-compose.yaml` ne fournit ni MariaDB ni les bases de données du projet. Créer/configurer séparément les quatre bases dont les URL sont illustrées dans `.env.global.example`, ou adapter ces URL à votre installation. Ne pas lancer une commande de réinitialisation Prisma sur une base contenant des données à conserver.
 
 ## Prisma
 
@@ -82,7 +90,7 @@ npm run db:auth:studio
 
 Les mêmes familles de scripts existent pour `user`, `configuration` et `forwarding`. Les commandes `db:<service>:reset` réinitialisent la base concernée et peuvent supprimer ses données.
 
-Les clients Prisma sont générés dans les dossiers `src/generated` des services, lesquels sont ignorés par Git. Il faut donc générer le client après l’installation et après toute modification de schéma. L’intégration du client centralisé attendu par le forwarding n’est pas encore présente dans les fichiers versionnés; détails et précautions dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+Les clients Prisma sont générés dans les dossiers `src/generated` des services, lesquels sont ignorés par Git. Il faut donc générer le client après l’installation et après toute modification de schéma. L’import du client utilisé par le forwarding n’est pas encore reproductible depuis un clone propre; détails et précautions dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## Démarrage et scripts utiles
 
@@ -116,5 +124,4 @@ La gateway applique le préfixe global `/api` et configure Swagger à l’adress
 ## Documentation complémentaire
 
 - [READCOMMAND.md](./READCOMMAND.md) — aide-mémoire des commandes présentes dans `package.json`.
-- [READNOTE.md](./READNOTE.md) — origine des notes de travail et état du projet de package de base de données.
-- [PROJECT-STATUS.md](./PROJECT-STATUS.md) — constats vérifiés, limites et décisions restant à prendre.
+- [PROJECT-STATUS.md](./PROJECT-STATUS.md) — constats vérifiés et réserves techniques restantes.

@@ -59,6 +59,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "dotenv": "^18.0.10",
     "geoip-country": "^5.0.202607010001",
     "ioredis": "^5.11.1",
     "nodemailer": "^9.0.1",
@@ -84,7 +85,6 @@
     "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^7.0.0",
     "concurrently": "^10.0.3",
-    "dotenv": "^17.4.2",
     "globals": "^17.0.0",
     "jest": "^30.0.0",
     "nodemon": "^3.1.14",
@@ -115,7 +115,11 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@nexus/configuration(|/.*)$": "<rootDir>/libs/configuration/src/$1"
+    }
   }
 }
