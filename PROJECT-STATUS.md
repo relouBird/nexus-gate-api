@@ -24,14 +24,10 @@
 
 ## Validation
 
-Les builds NestJS à lancer explicitement sont :
+`npm run build` compile séquentiellement la librairie de configuration et les quatre applications NestJS. Pour compiler un seul projet NestJS :
 
 ```powershell
-npx nest build configuration
-npx nest build api-gateway
-npx nest build auth-service
-npx nest build user-service
-npx nest build configuration-service
+npx nest build <nom-du-projet>
 ```
 
-Le build du forwarding est indépendant et dépend du package Prisma non versionné. Les tests doivent être lancés séparément; le projet avait auparavant une incompatibilité `ignoreDeprecations` avec TypeScript 5.9. La valeur de configuration TypeScript a été abaissée à `5.0` pour être compatible avec les dépendances TypeScript 5 déclarées.
+Le forwarding reste volontairement hors de `npm run build` : il se compile séparément avec `npx tsc -p apps/forwarding-service/tsconfig.json` et dépend du package Prisma non versionné. Les tests doivent être lancés séparément. Les alias TypeScript reposent sur `baseUrl` à la racine; les applications Nest définissent `rootDir` sur la racine du dépôt pour inclure `libs/`. `ignoreDeprecations` vaut `5.0`, cohérent avec TypeScript 5.9.3 installé selon le lockfile; utiliser `6.0` nécessite d’abord une mise à niveau effective de TypeScript vers la version 6.

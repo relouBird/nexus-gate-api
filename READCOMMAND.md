@@ -70,10 +70,11 @@ Les scripts Prisma utilisent `<SERVICE>_DATABASE_URL` dans `.env.global`; les co
 
 ```powershell
 npm run build
+npx tsc -p apps/forwarding-service/tsconfig.json
 npx nest build configuration
 npx jest libs/configuration/src/configuration.service.spec.ts --runInBand
 npm test
 npm run test:e2e
 ```
 
-`npm run build` compile le projet NestJS par défaut (la gateway); compiler explicitement les autres apps avec `npx nest build <nom>`. `test:e2e` ne couvre que l’API gateway.
+`npm run build` compile séquentiellement la librairie `configuration` et les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.

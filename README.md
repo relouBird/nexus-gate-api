@@ -115,7 +115,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-Le script `test:e2e` utilise la configuration du gateway uniquement.
+`npm run build` compile séquentiellement la librairie de configuration et les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
 
 ## API
 
