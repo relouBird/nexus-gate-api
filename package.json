@@ -6,9 +6,10 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build configuration && nest build api-gateway && nest build auth-service && nest build user-service && nest build configuration-service",
-    "build:lib:all": "nest build configuration",
+    "build": "npm run build:lib:all && npm run build:app:all",
+    "build:lib:all": "nest build configuration && nest build redis-cache",
     "build:lib:configuration": "nest build configuration",
+    "build:lib:redis-cache": "nest build redis-cache",
     "build:app:all": "nest build api-gateway && nest build auth-service && nest build user-service && nest build configuration-service",
     "build:app:api-gateway": "nest build api-gateway",
     "build:app:auth-service": "nest build auth-service",
@@ -126,7 +127,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@nexus/configuration(|/.*)$": "<rootDir>/libs/configuration/src/$1"
+      "^@nexus/configuration(|/.*)$": "<rootDir>/libs/configuration/src/$1",
+      "^@nexus/redis-cache(|/.*)$": "<rootDir>/libs/redis-cache/src/$1"
     }
   }
 }

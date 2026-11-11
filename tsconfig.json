@@ -12,7 +12,9 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "types": ["jest"],
+    "types": [
+      "jest"
+    ],
     "baseUrl": ".",
     "incremental": true,
     "skipLibCheck": true,
@@ -28,6 +30,12 @@
       ],
       "@nexus/configuration/*": [
         "./libs/configuration/src/*"
+      ],
+      "@nexus/redis-cache": [
+        "libs/redis-cache/src"
+      ],
+      "@nexus/redis-cache/*": [
+        "libs/redis-cache/src/*"
       ]
     },
     "target": "ES2022"

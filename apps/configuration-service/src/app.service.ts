@@ -4,7 +4,7 @@ import { PrismaService } from './prisma/prisma.service';
 
 import * as bcrypt from 'bcrypt';
 
-import { RedisService } from './redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 @Injectable()
 export class AppService {

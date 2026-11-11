@@ -14,7 +14,7 @@ import {
   ToggleTunnelServerDto,
 } from './server.dto';
 import { AccessPolicyDto } from 'apps/user-service/src/user/dto/access-policy.dto';
-import { RedisService } from '../redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 import {
   AccessPolicy,
   canUserAccess,

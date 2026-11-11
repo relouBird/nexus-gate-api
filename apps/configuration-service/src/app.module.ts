@@ -5,7 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
-import { RedisModule } from './redis/redis.module';
+import { RedisCacheModule } from '@nexus/redis-cache';
 import { ServerModule } from './server/server.module';
 import { RuleModule } from './rule/rule.module';
 import { TokenModule } from './token/token.module';
@@ -35,7 +35,7 @@ import {
     RequestLogsModule,
 
     // Les utilitaires
-    RedisModule,
+    RedisCacheModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

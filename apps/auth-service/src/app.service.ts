@@ -13,7 +13,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { UserStatus } from './generated/prisma-client';
 import { OtpService } from './otp/otp.service';
 import { AuthContext } from './common/interfaces/auth-context.interface';
-import { RedisService } from './redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 import { NotificationsService } from './mail/notifications/notifications.service';
 
 // Durée de session par défaut — même valeur que dans TeamService.registerTeam

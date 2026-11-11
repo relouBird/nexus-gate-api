@@ -7,7 +7,7 @@ import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
-import { RedisModule } from './redis/redis.module';
+import { RedisCacheModule } from '@nexus/redis-cache';
 import {
   ConfigurationModule,
   ServiceConfiguration,
@@ -31,7 +31,7 @@ import {
     NotificationsModule,
 
     // Les utilitaires
-    RedisModule,
+    RedisCacheModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
