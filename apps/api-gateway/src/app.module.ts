@@ -5,7 +5,12 @@ import { LoggerMiddleware } from './app.middleware';
 import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from './app.constant';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  ConfigurationModule as SharedConfigurationModule,
+  ServiceConfiguration,
+} from '@nexus/configuration';
+
+// Les modules liés au fonctionnement de l'API Gateway
 import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { MeModule } from './me/me.module';
@@ -15,47 +20,43 @@ import { ConfigurationModule } from './configuration/configuration.module';
 @Module({
   imports: [
     HttpModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: 'apps/api-gateway/.env',
-    }),
+    SharedConfigurationModule.forRoot('api-gateway'),
     ClientsModule.registerAsync({
       clients: [
         {
-          imports: [ConfigModule],
           name: MICROSERVICES_CLIENTS.AUTH_SERVICE,
-          useFactory: (config: ConfigService) => ({
+          useFactory: (config: ServiceConfiguration) => ({
             transport: Transport.TCP,
             options: {
-              port: Number(config.get('AUTH_SERVICE_PORT')) ?? 9003,
+              host: config.get('AUTH_SERVICE_HOST', 'localhost'),
+              port: config.getNumber('AUTH_SERVICE_PORT', 9003),
             },
           }),
-          inject: [ConfigService],
+          inject: [ServiceConfiguration],
         },
         {
-          imports: [ConfigModule],
           name: MICROSERVICES_CLIENTS.USER_SERVICE,
-          useFactory: (config: ConfigService) => ({
+          useFactory: (config: ServiceConfiguration) => ({
             transport: Transport.TCP,
             options: {
-              port: Number(config.get('USER_SERVICE_PORT')) ?? 9004,
+              host: config.get('USER_SERVICE_HOST', 'localhost'),
+              port: config.getNumber('USER_SERVICE_PORT', 9004),
             },
           }),
-          inject: [ConfigService],
+          inject: [ServiceConfiguration],
         },
         {
-          imports: [ConfigModule],
           name: MICROSERVICES_CLIENTS.CONFIGURATION_SERVICE,
-          useFactory: (config: ConfigService) => ({
+          useFactory: (config: ServiceConfiguration) => ({
             transport: Transport.TCP,
             options: {
-              port: Number(config.get('CONFIGURATION_SERVICE_PORT')) ?? 9005,
+              host: config.get('CONFIGURATION_SERVICE_HOST', 'localhost'),
+              port: config.getNumber('CONFIGURATION_SERVICE_PORT', 9005),
             },
           }),
-          inject: [ConfigService],
+          inject: [ServiceConfiguration],
         },
       ],
-      isGlobal: true,
     }),
     AuthModule,
     TeamModule,

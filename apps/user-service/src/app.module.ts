@@ -2,27 +2,29 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './app.constants';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
 import { RedisModule } from './redis/redis.module';
+import {
+  ConfigurationModule,
+  ServiceConfiguration,
+} from '@nexus/configuration';
 
 @Module({
   imports: [
     PrismaModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: 'apps/user-service/.env',
-    }),
+    ConfigurationModule.forRoot('user-service'),
     PassportModule,
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '1d' }, // '60s', '15m','1h', '7d', etc.
+      inject: [ServiceConfiguration],
+      useFactory: (config: ServiceConfiguration) => ({
+        secret: config.getSharedOrThrow('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
     }),
     // Les modules métiers...
     UserModule,

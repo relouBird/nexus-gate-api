@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { ConfigService } from '@nestjs/config';
+import { ServiceConfiguration } from '@nexus/configuration';
 
 @Injectable()
 export class MailService {
@@ -31,20 +31,21 @@ export class MailService {
   //   this.sender = String(user);
   // }
 
-  constructor(private configService: ConfigService) {
+  constructor(private configuration: ServiceConfiguration) {
     this.transporter = createTransport({
-      host: this.configService.get('SMTP_HOST'),
-      port: Number(this.configService.get('SMTP_PORT')),
+      host: this.configuration.getShared('SMTP_HOST', 'localhost'),
+      port: this.configuration.getSharedNumber('SMTP_PORT', 587),
     });
 
-    this.sender = String(this.configService.get('SMTP_HOST'));
+    this.sender =
+      this.configuration.getShared('SMTP_FROM', 'noreply@nexus-gate.com') ??
+      'noreply@nexus-gate.com';
   }
 
   async sendMail(to: string, subject: string, html: string): Promise<void> {
     try {
       await this.transporter.sendMail({
-        from: 'noreply@nexus-gate.com',
-        // from: `"NexusGate, Supports" <${this.sender}>`,
+        from: this.sender,
         to,
         subject,
         html,

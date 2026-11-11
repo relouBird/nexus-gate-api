@@ -5,27 +5,26 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
+import {
+  loadGlobalEnvironment,
+  readServiceEnvironment,
+  readServiceEnvironmentNumber,
+} from '@nexus/configuration';
 import { AuthServiceModule } from './app.module';
 import { printRpcPatterns } from './app.helper';
 
-// Chargement des variables d'environnement du service.
-dotenv.config({
-  path: path.resolve(__dirname, '../../auth-service/.env'),
-  override: true,
-});
+loadGlobalEnvironment();
 
 async function bootstrap() {
-  const port = Number(process.env.PORT ?? 5552);
+  const host = readServiceEnvironment('auth-service', 'TCP_HOST', 'localhost');
+  const port = readServiceEnvironmentNumber('auth-service', 'TCP_PORT', 9003);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AuthServiceModule,
     {
       transport: Transport.TCP,
       options: {
-        host: 'localhost',
+        host,
         port,
       },
     },
@@ -56,7 +55,7 @@ async function bootstrap() {
 
   printRpcPatterns();
 
-  console.log(`🚀 Auth Service RPC listening on tcp://localhost:${port}`);
+  console.log(`🚀 Auth Service RPC listening on tcp://${host}:${port}`);
 }
 
 bootstrap();

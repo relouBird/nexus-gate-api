@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './auth.constants';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './auth.public';
 import { Reflector } from '@nestjs/core';
@@ -14,6 +13,7 @@ import {
   AuthRequest,
 } from '../common/interfaces/auth-context.interface';
 import { RedisService } from '../redis/redis.service';
+import { ServiceConfiguration } from '@nexus/configuration';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -21,6 +21,7 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private reflector: Reflector,
     private redis: RedisService,
+    private readonly configuration: ServiceConfiguration,
   ) {}
 
   /**
@@ -47,7 +48,7 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const payload: AuthContext = await this.jwtService.verifyAsync(token, {
-        secret: jwtConstants.secret,
+        secret: this.configuration.getSharedOrThrow('JWT_SECRET'),
       });
 
       const storedJti = await this.redis.get(`session:${payload.sub}`);
