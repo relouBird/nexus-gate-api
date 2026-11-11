@@ -11,6 +11,15 @@
   "monorepo": true,
   "root": "apps/api-gateway",
   "projects": {
+    "configuration": {
+      "type": "library",
+      "root": "libs/configuration",
+      "entryFile": "index",
+      "sourceRoot": "libs/configuration/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/configuration/tsconfig.lib.json"
+      }
+    },
     "api-gateway": {
       "type": "application",
       "root": "apps/api-gateway",
@@ -27,15 +36,6 @@
       "sourceRoot": "apps/auth-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
-      }
-    },
-    "configuration": {
-      "type": "library",
-      "root": "libs/configuration",
-      "entryFile": "index",
-      "sourceRoot": "libs/configuration/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/configuration/tsconfig.lib.json"
       }
     },
     "configuration-service": {
