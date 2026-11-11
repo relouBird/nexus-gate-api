@@ -12,9 +12,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "outDir": "./dist",
     "types": ["jest"],
-    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,8 +21,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "rootDir": "./apps",
-    "paths": {},
+    "paths": {
+      "@nexus/configuration": [
+        "./libs/configuration/src/index.ts"
+      ],
+      "@nexus/configuration/*": [
+        "./libs/configuration/src/*"
+      ]
+    },
     "target": "ES2022"
   }
 }

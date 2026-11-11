@@ -1,10 +1,5 @@
 import { TEAM_PATTERNS } from './team/team.constants';
 
-export const jwtConstants = {
-  secret:
-    'GyNpgC2ErYMDAAAACgAAAEcAAAAOAAAALS7RQI-Xg0Gr4wBDJkS_QQMAAAAKAAAARwAAAA4AAAC0HQAAroeUAOJGPgDShpQAWkc-AAIAzwEAAAAA',
-};
-
 export const AUTH_PATTERNS = {
   LOGIN: 'auth.login',
   LOGOUT: 'auth.logout',

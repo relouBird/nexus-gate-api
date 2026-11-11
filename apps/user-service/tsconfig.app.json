@@ -9,10 +9,13 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
     "sourceMap": true,
+    "rootDir": "../..",
     "outDir": "../../dist/apps/user-service",
     "types": ["jest"],
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "paths": {
+      "@nexus/configuration": ["libs/configuration/src/index.ts"],
+      "@nexus/configuration/*": ["libs/configuration/src/*"],
       "src/*": ["./src/*"]
     },
     "incremental": true,
