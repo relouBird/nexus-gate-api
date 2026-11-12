@@ -7,8 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "npm run build:lib:all && npm run build:app:all",
-    "build:lib:all": "nest build configuration && nest build redis-cache",
+    "build:lib:all": "nest build configuration && nest build redis-cache && nest build database",
     "build:lib:configuration": "nest build configuration",
+    "build:lib:database": "nest build database",
     "build:lib:redis-cache": "nest build redis-cache",
     "build:app:all": "nest build api-gateway && nest build auth-service && nest build user-service && nest build configuration-service",
     "build:app:api-gateway": "nest build api-gateway",
@@ -25,21 +26,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
-    "db:auth:generate": "prisma generate --config apps/auth-service/prisma.config.ts",
-    "db:auth:format": "prisma format --schema=apps/auth-service/prisma/schema.prisma",
-    "db:auth:studio": "prisma studio --config apps/auth-service/prisma.config.ts",
-    "db:auth:migrate": "prisma migrate dev --name init --config apps/auth-service/prisma.config.ts",
-    "db:auth:reset": "prisma migrate reset --config apps/auth-service/prisma.config.ts",
-    "db:user:generate": "prisma generate --config apps/user-service/prisma.config.ts",
-    "db:user:format": "prisma format --schema=apps/user-service/prisma/schema.prisma",
-    "db:user:studio": "prisma studio --config apps/user-service/prisma.config.ts",
-    "db:user:migrate": "prisma migrate dev --name init --config apps/user-service/prisma.config.ts",
-    "db:user:reset": "prisma migrate reset --config apps/user-service/prisma.config.ts",
-    "db:configuration:generate": "prisma generate --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:format": "prisma format --schema=apps/configuration-service/prisma/schema.prisma",
-    "db:configuration:studio": "prisma studio --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:migrate": "prisma migrate dev --name init --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:reset": "prisma migrate reset --config apps/configuration-service/prisma.config.ts",
+    "db:services:generate": "prisma generate --config libs/database/prisma.config.ts",
+    "db:services:format": "prisma format --schema=libs/database/prisma/schema.prisma",
+    "db:services:studio": "prisma studio --config libs/database/prisma.config.ts",
+    "db:services:migrate": "prisma migrate dev --name init --config libs/database/prisma.config.ts",
+    "db:services:reset": "prisma migrate reset --config libs/database/prisma.config.ts",
     "db:forwarding:generate": "prisma generate --config apps/forwarding-service/prisma.config.ts",
     "db:forwarding:generate-copy": "node apps/forwarding-service/prisma.copy.ts",
     "db:forwarding:format": "prisma format --schema=apps/forwarding-service/prisma/schema.prisma",
@@ -128,7 +119,8 @@
     ],
     "moduleNameMapper": {
       "^@nexus/configuration(|/.*)$": "<rootDir>/libs/configuration/src/$1",
-      "^@nexus/redis-cache(|/.*)$": "<rootDir>/libs/redis-cache/src/$1"
+      "^@nexus/redis-cache(|/.*)$": "<rootDir>/libs/redis-cache/src/$1",
+      "^@nexus/database(|/.*)$": "<rootDir>/libs/database/src/$1"
     }
   }
 }

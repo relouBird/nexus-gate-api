@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from '../prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import { randomBytes } from 'crypto';
 import {
   CreateGatewayTokenDto,
@@ -17,7 +17,7 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly redis: RedisService,
   ) {}
 

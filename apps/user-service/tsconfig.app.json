@@ -17,6 +17,8 @@
       "@nexus/configuration/*": ["libs/configuration/src/*"],
       "@nexus/redis-cache": ["libs/redis-cache/src/index.ts"],
       "@nexus/redis-cache/*": ["libs/redis-cache/src/*"],
+      "@nexus/database": ["libs/database/src/index.ts"],
+      "@nexus/database/*": ["libs/database/src/*"],
       "src/*": ["./src/*"]
     },
     "incremental": true,

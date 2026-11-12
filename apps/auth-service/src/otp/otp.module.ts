@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from '@nexus/database';
 import { OtpService } from './otp.service';
-import { PrismaModule } from '../prisma/prisma.module';
+
 
 @Module({
-  imports: [PrismaModule],
+  imports: [DatabaseModule],
   providers: [OtpService],
   exports: [OtpService],
 })

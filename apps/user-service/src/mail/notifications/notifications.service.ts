@@ -7,7 +7,9 @@ import {
   AccountCreatedEmail,
   AccountDeletedEmail,
 } from '../templates/index';
-import type { UserRole } from '../../generated/prisma-client';
+
+// Import PrismaClient to access the UserRole enum
+import { UserRole } from '@nexus/database/generated/prisma-client';
 
 // ─── Payloads ─────────────────────────────────────────────────
 

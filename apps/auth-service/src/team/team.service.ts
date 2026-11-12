@@ -3,7 +3,7 @@ import { RpcException } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { PrismaService } from '../prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import { RegisterTeamDto } from './dto/register-team.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
 import { OtpService } from '../otp/otp.service';
@@ -19,7 +19,7 @@ export class TeamService {
   private readonly logger = new Logger(TeamService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly jwt: JwtService,
     private readonly otpService: OtpService,
     private readonly notificationService: NotificationsService,

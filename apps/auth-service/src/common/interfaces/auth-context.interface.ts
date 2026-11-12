@@ -1,4 +1,5 @@
-import { UserRole } from '../../generated/prisma-client';
+// Importation de l'énumération UserRole depuis le client Prisma généré
+import type { UserRole } from '@nexus/database/generated/prisma-client';
 
 /**
  * Représente l'utilisateur authentifié, tel que décodé depuis le JWT

@@ -9,7 +9,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { AuthContextDto } from '../common/interfaces/auth-context.dto';
-import { ActionType, RuleType } from '../generated/prisma-client/client';
+
+// Import PrismaClient to access the UserRole enum
+import { ActionType, RuleType } from '@nexus/database/generated/prisma-client';
 
 // ───────────────────────────────────────────────────────────────
 // ─── CREATE RULE ───────────────────────────────────────────────

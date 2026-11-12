@@ -36,6 +36,12 @@
       ],
       "@nexus/redis-cache/*": [
         "libs/redis-cache/src/*"
+      ],
+      "@nexus/database": [
+        "libs/database/src"
+      ],
+      "@nexus/database/*": [
+        "libs/database/src/*"
       ]
     },
     "target": "ES2022"

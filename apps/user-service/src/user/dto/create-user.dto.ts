@@ -8,7 +8,9 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { UserRole } from '../../generated/prisma-client';
+
+// Import PrismaClient to access the UserRole enum
+import { UserRole } from '@nexus/database/generated/prisma-client';
 import { Type } from 'class-transformer';
 import { AuthContextDto } from '../../common/interfaces/auth-context.dto';
 import { AccessPolicyDto } from './access-policy.dto';
