@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
+import { MailerModule } from '@nexus/mailer';
 import { NotificationsService } from './notifications.service';
-import { MailModule } from '../mail.module';
 
 @Global() // disponible partout sans ré-import, comme PrismaService
 @Module({
-  imports: [MailModule],
+  imports: [MailerModule],
   providers: [NotificationsService],
   exports: [NotificationsService],
 })

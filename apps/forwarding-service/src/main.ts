@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
-import path from 'node:path';
 import Server from './server/Server';
 import { bootstrap } from './bootstrap';
+import { getEnvironmentFilePath } from './environment';
 
 dotenv.config({
-  path: path.resolve(process.cwd(), '.env.global'),
+  path: getEnvironmentFilePath(),
 });
 
 // Création du serveur et du pipeline de traitement des requêtes

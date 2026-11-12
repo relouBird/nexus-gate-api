@@ -16,8 +16,27 @@ export function getApplicationPrefix(applicationName: ApplicationName): string {
   return applicationName.replace(/-/g, '_').toUpperCase();
 }
 
+export function getGlobalEnvironmentPath(): string {
+  const environment = (
+    process.env.APP_ENV ??
+    process.env.NODE_ENV ??
+    'development'
+  ).toLowerCase();
+  const candidates =
+    environment === 'production' || environment === 'prod'
+      ? ['.env.global.production', '.env.prod', '.env.production']
+      : environment === 'test'
+        ? ['.env.global.test', '.env.test']
+        : ['.env.global', '.env'];
+  const envFile = candidates.find((candidate) =>
+    existsSync(resolve(process.cwd(), candidate)),
+  );
+
+  return resolve(process.cwd(), envFile ?? candidates[0]);
+}
+
 export function loadGlobalEnvironment(): void {
-  const envFilePath = resolve(process.cwd(), '.env.global');
+  const envFilePath = getGlobalEnvironmentPath();
   if (existsSync(envFilePath)) {
     loadDotEnv({ path: envFilePath });
   }

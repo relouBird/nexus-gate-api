@@ -1,12 +1,12 @@
-// mail/services/notifications.service.ts
+// mail/notifications/notifications.service.ts
 import { Injectable } from '@nestjs/common';
-import { MailService } from '../mail.service';
+import { MailerService } from '@nexus/mailer';
 import {
   PasswordChangedEmail,
   PasswordRecreatedByAdminEmail,
   AccountCreatedEmail,
   AccountDeletedEmail,
-} from '../templates/index';
+} from './templates';
 
 // Import PrismaClient to access the UserRole enum
 import { UserRole } from '@nexus/database/generated/prisma-client';
@@ -62,12 +62,12 @@ export type NotificationContext =
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly mailService: MailService) {}
+  constructor(private readonly mailerService: MailerService) {}
 
   async send(context: NotificationContext): Promise<void> {
     const { email } = context;
     const { subject, html } = this.resolve(context);
-    await this.mailService.sendMail(email, subject, html);
+    await this.mailerService.sendMail(email, subject, html);
   }
 
   private resolve(ctx: NotificationContext): { subject: string; html: string } {

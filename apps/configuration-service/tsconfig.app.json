@@ -19,6 +19,8 @@
       "@nexus/redis-cache/*": ["libs/redis-cache/src/*"],
       "@nexus/database": ["libs/database/src/index.ts"],
       "@nexus/database/*": ["libs/database/src/*"],
+      "@nexus/mailer": ["libs/mailer/src/index.ts"],
+      "@nexus/mailer/*": ["libs/mailer/src/*"],
       "src/*": ["./src/*"]
     },
     "incremental": true,

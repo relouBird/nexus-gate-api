@@ -1,4 +1,4 @@
-// mail/templates/index.ts
+// mail/notifications/templates/index.ts
 // Templates calés sur les endpoints doc NexusGate :
 //   POST /auth/team/register   → WelcomeTeamEmail
 //   POST /auth/otp/send        → OTPEmail (login + reset)

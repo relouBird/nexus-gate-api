@@ -8,7 +8,7 @@ import { PassportModule } from '@nestjs/passport/dist/passport.module';
 // Modules métiers
 import { TeamModule } from './team/team.module';
 import { OtpModule } from './otp/otp.module';
-import { NotificationsModule } from './mail/notifications/notifications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 // Librairies externes
 import { DatabaseModule } from '@nexus/database';

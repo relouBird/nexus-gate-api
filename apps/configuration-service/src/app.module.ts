@@ -5,6 +5,7 @@ import { DatabaseModule } from '@nexus/database';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { RedisCacheModule } from '@nexus/redis-cache';
+import { MailerModule } from '@nexus/mailer';
 import { ServerModule } from './server/server.module';
 import { RuleModule } from './rule/rule.module';
 import { TokenModule } from './token/token.module';
@@ -35,6 +36,7 @@ import {
 
     // Les utilitaires
     RedisCacheModule,
+    MailerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
