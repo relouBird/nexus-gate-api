@@ -8,7 +8,7 @@ import { RegisterTeamDto } from './dto/register-team.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
 import { OtpService } from '../otp/otp.service';
 import { AuthContext } from '../common/interfaces/auth-context.interface';
-import { NotificationsService } from '../mail/notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UpdateTeamDto } from './dto/update-team.dto';
 
 // Durée de session par défaut — à aligner sur JWT_EXPIRES_IN (doc : 7d)

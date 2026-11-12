@@ -15,7 +15,7 @@ import { AuthContextDto } from '../common/interfaces/auth-context.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { NotificationsService } from '../mail/notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UserService {
