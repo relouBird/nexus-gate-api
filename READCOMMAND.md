@@ -46,25 +46,25 @@ Choisir le préfixe `@nexus` lorsque le CLI le demande. Les commandes de build c
 
 ## Base de données Prisma
 
-Remplacer `<service>` par `auth`, `user`, `configuration` ou `forwarding` :
+Base partagée des applications NestJS :
 
 ```powershell
-npm run db:<service>:generate
-npm run db:<service>:format
-npm run db:<service>:migrate
-npm run db:<service>:studio
+npm run db:services:generate
+npm run db:services:format
+npm run db:services:migrate
+npm run db:services:studio
 ```
 
-Exemple :
+Commandes séparées pour la base du forwarding :
 
 ```powershell
-npm run db:auth:generate
-npm run db:auth:format
-npm run db:auth:migrate
-npm run db:auth:studio
+npm run db:forwarding:generate
+npm run db:forwarding:format
+npm run db:forwarding:migrate
+npm run db:forwarding:studio
 ```
 
-Les scripts Prisma utilisent `<SERVICE>_DATABASE_URL` dans `.env.global`; les connexions applicatives NestJS utilisent les clés de base de données du même namespace. Les commandes `db:<service>:reset` peuvent supprimer les données de la base ciblée. Le script `db:forwarding:generate-copy` référence toujours `apps/forwarding-service/prisma.copy.ts`, absent du dépôt.
+Les services NestJS utilisent `SHARED_SERVICE_DATABASE_*` et `libs/database/prisma/schema.prisma`. Le build de la librairie Database régénère le client Prisma ignoré par Git. `db:services:reset` et `db:forwarding:reset` sont destructives; vérifier les bases ciblées avant de les lancer. Le script `db:forwarding:generate-copy` référence `apps/forwarding-service/prisma.copy.ts`, absent du dépôt.
 
 ## Build et tests
 
@@ -77,4 +77,4 @@ npm test
 npm run test:e2e
 ```
 
-`npm run build` compile séquentiellement les librairies `configuration` et `redis-cache`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.
+`npm run build` compile séquentiellement les librairies `configuration`, `redis-cache` et `database`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Il lance `prisma generate` avant le build Database. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.

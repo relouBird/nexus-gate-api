@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { DatabaseModule } from '@nexus/database';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
-import { DatabaseService } from '@nexus/database';
 import { UserModule } from './user/user.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
 import { RedisCacheModule } from '@nexus/redis-cache';
@@ -34,7 +33,6 @@ import {
     RedisCacheModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DatabaseService],
-  exports: [DatabaseService],
+  providers: [AppService],
 })
 export class UserServiceModule {}

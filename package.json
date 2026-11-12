@@ -7,9 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "npm run build:lib:all && npm run build:app:all",
-    "build:lib:all": "nest build configuration && nest build redis-cache && nest build database",
+    "build:lib:all": "npm run build:lib:configuration && npm run build:lib:redis-cache && npm run build:lib:database",
     "build:lib:configuration": "nest build configuration",
-    "build:lib:database": "nest build database",
+    "build:lib:database": "npm run db:services:generate && nest build database",
     "build:lib:redis-cache": "nest build redis-cache",
     "build:app:all": "nest build api-gateway && nest build auth-service && nest build user-service && nest build configuration-service",
     "build:app:api-gateway": "nest build api-gateway",
