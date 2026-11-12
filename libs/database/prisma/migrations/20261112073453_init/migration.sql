@@ -57,35 +57,46 @@ CREATE TABLE `Otp` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `GatewayToken` (
-    `id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
-    `value` VARCHAR(191) NOT NULL,
-    `scope` VARCHAR(191) NOT NULL DEFAULT '*',
-    `user_id` VARCHAR(191) NOT NULL,
-    `team_id` VARCHAR(191) NOT NULL,
-    `revoked` BOOLEAN NOT NULL DEFAULT false,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
-
-    UNIQUE INDEX `GatewayToken_value_key`(`value`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `Server` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `identifier` VARCHAR(191) NOT NULL,
     `url` VARCHAR(191) NOT NULL,
+    `status` ENUM('ONLINE', 'OFFLINE') NOT NULL DEFAULT 'ONLINE',
     `type` ENUM('CLOUD', 'LOCAL') NOT NULL DEFAULT 'CLOUD',
     `team_id` VARCHAR(191) NOT NULL,
+    `headers` JSON NOT NULL,
     `require_token` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Server_identifier_key`(`identifier`),
     PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `GatewayToken` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `value` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `team_id` VARCHAR(191) NOT NULL,
+    `revoked` BOOLEAN NOT NULL DEFAULT false,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `expiresAt` DATETIME(3) NULL,
+
+    UNIQUE INDEX `GatewayToken_value_key`(`value`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `GatewayTokenServer` (
+    `gatewayTokenId` VARCHAR(191) NOT NULL,
+    `serverId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`gatewayTokenId`, `serverId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -142,13 +153,19 @@ ALTER TABLE `Session` ADD CONSTRAINT `Session_user_id_fkey` FOREIGN KEY (`user_i
 ALTER TABLE `Otp` ADD CONSTRAINT `Otp_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Server` ADD CONSTRAINT `Server_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `GatewayToken` ADD CONSTRAINT `GatewayToken_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `GatewayToken` ADD CONSTRAINT `GatewayToken_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Server` ADD CONSTRAINT `Server_team_id_fkey` FOREIGN KEY (`team_id`) REFERENCES `Team`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `GatewayTokenServer` ADD CONSTRAINT `GatewayTokenServer_gatewayTokenId_fkey` FOREIGN KEY (`gatewayTokenId`) REFERENCES `GatewayToken`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GatewayTokenServer` ADD CONSTRAINT `GatewayTokenServer_serverId_fkey` FOREIGN KEY (`serverId`) REFERENCES `Server`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Rule` ADD CONSTRAINT `Rule_server_id_fkey` FOREIGN KEY (`server_id`) REFERENCES `Server`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

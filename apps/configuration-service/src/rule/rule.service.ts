@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from '../prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import {
   CreateRuleDto,
   FindAllRulesDto,
@@ -13,7 +13,7 @@ import {
 export class RuleService {
   private readonly logger = new Logger(RuleService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: DatabaseService) {}
 
   async create(dto: CreateRuleDto) {
     try {

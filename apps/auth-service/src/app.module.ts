@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
+
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
-import { PrismaService } from './prisma/prisma.service';
+
+// Modules métiers
 import { TeamModule } from './team/team.module';
 import { OtpModule } from './otp/otp.module';
-import { RedisCacheModule } from '@nexus/redis-cache';
 import { NotificationsModule } from './mail/notifications/notifications.module';
+
+// Librairies externes
+import { DatabaseModule, DatabaseService } from '@nexus/database';
+import { RedisCacheModule } from '@nexus/redis-cache';
 import {
   ConfigurationModule,
   ServiceConfiguration,
@@ -16,7 +20,7 @@ import {
 
 @Module({
   imports: [
-    PrismaModule,
+    DatabaseModule,
     ConfigurationModule.forRoot('auth-service'),
     PassportModule,
     JwtModule.registerAsync({
@@ -35,7 +39,7 @@ import {
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
-  exports: [PrismaService],
+  providers: [AppService, DatabaseService],
+  exports: [DatabaseService],
 })
 export class AuthServiceModule {}

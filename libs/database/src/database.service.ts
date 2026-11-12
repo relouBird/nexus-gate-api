@@ -1,21 +1,20 @@
-// prisma/prisma.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '../generated/prisma-client';
+import { PrismaClient } from './generated/prisma-client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { ServiceConfiguration } from '@nexus/configuration';
 
 @Injectable()
-export class PrismaService
+export class DatabaseService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(configuration: ServiceConfiguration) {
     const adapter = new PrismaMariaDb({
-      host: configuration.getOrThrow('DATABASE_HOST'),
-      port: configuration.getNumber('DATABASE_PORT', 3306),
-      user: configuration.getOrThrow('DATABASE_USER'),
-      password: configuration.get('DATABASE_PASSWORD', '') ?? '',
-      database: configuration.getOrThrow('DATABASE_NAME'),
+      host: configuration.getSharedOrThrow('DATABASE_HOST'),
+      port: configuration.getSharedNumber('DATABASE_PORT', 3306),
+      user: configuration.getSharedOrThrow('DATABASE_USER'),
+      password: configuration.getShared('DATABASE_PASSWORD', '') ?? '',
+      database: configuration.getSharedOrThrow('DATABASE_NAME'),
       connectionLimit: 5,
     });
     super({ adapter });

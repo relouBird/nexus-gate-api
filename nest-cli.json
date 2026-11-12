@@ -47,6 +47,15 @@
         "tsConfigPath": "apps/configuration-service/tsconfig.app.json"
       }
     },
+    "prisma": {
+      "type": "library",
+      "root": "libs/database",
+      "entryFile": "index",
+      "sourceRoot": "libs/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database/tsconfig.lib.json"
+      }
+    },
     "redis-cache": {
       "type": "library",
       "root": "libs/redis-cache",

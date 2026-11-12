@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from '../prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import { canUserAccess, AccessPolicy } from '../utils/policy.util';
 import { GetLogsDto } from './request-logs.dto';
 import {
@@ -13,7 +13,7 @@ import {
 export class RequestLogsService {
   private readonly logger = new Logger(RequestLogsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: DatabaseService) {}
 
   async findAll(dto: GetLogsDto) {
     try {

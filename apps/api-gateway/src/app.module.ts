@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerMiddleware } from './app.middleware';
 import { HttpModule } from '@nestjs/axios';
+
+// Librairies externes
 import {
   ConfigurationModule as SharedConfigurationModule,
 } from '@nexus/configuration';

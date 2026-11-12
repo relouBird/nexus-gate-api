@@ -3,18 +3,18 @@ import { RpcException } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { PrismaService } from './prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ChangePasswordWithOtpDto } from './dto/change-password-with-otp.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
-import { UserStatus } from './generated/prisma-client';
 import { OtpService } from './otp/otp.service';
-import { AuthContext } from './common/interfaces/auth-context.interface';
-import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 import { NotificationsService } from './mail/notifications/notifications.service';
+import { AuthContext } from './common/interfaces/auth-context.interface';
+import { DatabaseService } from '@nexus/database';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
+import { UserStatus } from '@nexus/database/generated/prisma-client';
 
 // Durée de session par défaut — même valeur que dans TeamService.registerTeam
 // (à terme : factoriser dans une config partagée, ex: ConfigService)
@@ -25,7 +25,7 @@ export class AppService {
   private readonly logger = new Logger(AppService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly otpService: OtpService,
     private readonly notificationService: NotificationsService,
     private readonly jwt: JwtService,

@@ -6,9 +6,9 @@ import { config as loadDotEnv } from 'dotenv';
 
 loadDotEnv({ path: resolve(process.cwd(), '.env.global') });
 
-const databaseUrl = process.env.FORWARDING_SERVICE_DATABASE_URL;
+const databaseUrl = process.env.SHARED_SERVICE_DATABASE_URL;
 if (!databaseUrl) {
-  throw new Error('Missing configuration: FORWARDING_SERVICE_DATABASE_URL');
+  throw new Error('Missing configuration: SHARED_SERVICE_DATABASE_URL');
 }
 
 export default defineConfig({

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
+import { DatabaseModule } from '@nexus/database';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
-import { PrismaService } from './prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import { UserModule } from './user/user.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
 import { RedisCacheModule } from '@nexus/redis-cache';
@@ -15,7 +15,7 @@ import {
 
 @Module({
   imports: [
-    PrismaModule,
+    DatabaseModule,
     ConfigurationModule.forRoot('user-service'),
     PassportModule,
     JwtModule.registerAsync({
@@ -34,7 +34,7 @@ import {
     RedisCacheModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
-  exports: [PrismaService],
+  providers: [AppService, DatabaseService],
+  exports: [DatabaseService],
 })
 export class UserServiceModule {}
