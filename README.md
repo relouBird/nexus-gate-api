@@ -31,7 +31,7 @@ docker-compose.yaml
 package.json
 ```
 
-Chaque service de données contient actuellement son propre schéma Prisma et son répertoire de migrations. Les quatre schémas suivis dans Git sont identiques; cela ne signifie pas que leurs historiques de migration ou leurs bases sont synchronisés.
+Les applications NestJS partagent le schéma et les migrations Prisma de `libs/database`. Le forwarding reste autonome et conserve son propre `apps/forwarding-service/prisma/schema.prisma`; son intégration à la librairie partagée n’est pas encore reproductible depuis un clone propre.
 
 ## Prérequis
 
@@ -77,22 +77,22 @@ Arrêter Redis :
 docker compose down
 ```
 
-`docker-compose.yaml` ne fournit ni MariaDB ni les bases de données du projet. Créer/configurer séparément les quatre bases dont les URL sont illustrées dans `.env.global.example`, ou adapter ces URL à votre installation. Ne pas lancer une commande de réinitialisation Prisma sur une base contenant des données à conserver.
+`docker-compose.yaml` ne fournit ni MariaDB ni la base de données du projet. Configurer `SHARED_SERVICE_DATABASE_*` dans `.env.global` pour les services NestJS, ou adapter ces valeurs à votre installation. Ne pas lancer une commande de réinitialisation ou de migration sur une base contenant des données à conserver sans avoir d’abord vérifié son historique.
 
 ## Prisma
 
-Exemple de commandes Prisma pour `auth-service` :
+Les services NestJS utilisent le schéma centralisé de `libs/database` :
 
 ```bash
-npm run db:auth:generate
-npm run db:auth:format
-npm run db:auth:migrate
-npm run db:auth:studio
+npm run db:services:generate
+npm run db:services:format
+npm run db:services:migrate
+npm run db:services:studio
 ```
 
-Les mêmes familles de scripts existent pour `user`, `configuration` et `forwarding`. Les commandes `db:<service>:reset` réinitialisent la base concernée et peuvent supprimer ses données.
+`npm run build` génère d’abord le client Prisma partagé puis compile la librairie. Les commandes `db:services:reset` réinitialisent la base partagée et peuvent supprimer ses données. Les commandes `db:forwarding:*` restent séparées.
 
-Les clients Prisma sont générés dans les dossiers `src/generated` des services, lesquels sont ignorés par Git. Il faut donc générer le client après l’installation et après toute modification de schéma. L’import du client utilisé par le forwarding n’est pas encore reproductible depuis un clone propre; détails et précautions dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+Le client Prisma partagé est généré dans `libs/database/src/generated`, dossier ignoré par Git. Il est régénéré par le build; après une modification manuelle du schéma, il peut aussi être généré avec `npm run db:services:generate`. L’import utilisé par le forwarding dépend encore d’un package local non versionné; voir [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## Démarrage et scripts utiles
 
@@ -117,7 +117,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-`npm run build` compile séquentiellement les librairies de configuration et Redis, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
+`npm run build` génère le client partagé, compile les librairies de configuration, Redis et base de données, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
 
 ## API
 

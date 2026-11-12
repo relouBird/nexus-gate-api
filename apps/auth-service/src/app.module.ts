@@ -11,7 +11,7 @@ import { OtpModule } from './otp/otp.module';
 import { NotificationsModule } from './mail/notifications/notifications.module';
 
 // Librairies externes
-import { DatabaseModule, DatabaseService } from '@nexus/database';
+import { DatabaseModule } from '@nexus/database';
 import { RedisCacheModule } from '@nexus/redis-cache';
 import {
   ConfigurationModule,
@@ -39,7 +39,6 @@ import {
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, DatabaseService],
-  exports: [DatabaseService],
+  providers: [AppService],
 })
 export class AuthServiceModule {}
