@@ -1,7 +1,6 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { resolve } from 'node:path';
-import type { ApplicationName } from './environment';
+import { getGlobalEnvironmentPath, type ApplicationName } from './environment';
 import { ServiceConfiguration } from './configuration.service';
 
 @Global()
@@ -13,7 +12,7 @@ export class ConfigurationModule {
       module: ConfigurationModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: resolve(process.cwd(), '.env.global'),
+          envFilePath: getGlobalEnvironmentPath(),
           cache: true,
         }),
       ],

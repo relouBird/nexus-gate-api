@@ -2,17 +2,17 @@
 
 Nexus Gate est un backend en cours de développement pour gérer des équipes, des utilisateurs et des serveurs, puis acheminer des requêtes vers ces serveurs. Le dépôt regroupe une API HTTP, des microservices NestJS et un service de forwarding autonome.
 
-> **État du projet :** la configuration NestJS est centralisée dans `@nexus/configuration`, et les services Nest partagent le client Redis de `@nexus/redis-cache`. Les services lisent un fichier commun `.env.global`. Les réserves de déploiement restantes, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+> **État du projet :** la configuration NestJS est centralisée dans `@nexus/configuration`; les services Nest partagent les clients Redis et SMTP de `@nexus/redis-cache` et `@nexus/mailer`. Le forwarding reste autonome. Les réserves de déploiement, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## Architecture
 
 | Composant | Rôle observé |
 | --- | --- |
 | `api-gateway` | API HTTP NestJS, documentation Swagger, authentification et routage des requêtes vers les microservices TCP. |
-| `auth-service` | Authentification, équipes, sessions, OTP et notifications par courriel. |
-| `user-service` | Gestion des utilisateurs et du profil courant. |
-| `configuration-service` | Gestion des serveurs, règles, jetons de gateway et journaux de requêtes. |
-| `forwarding-service` | Serveur autonome basé sur `uWebSockets.js` : résolution du serveur, authentification par jeton, évaluation des règles, proxy et tunnels WebSocket. |
+| `auth-service` | Authentification, équipes, sessions, OTP et notifications par courriel via `@nexus/mailer`. |
+| `user-service` | Gestion des utilisateurs et du profil courant; notifications par courriel via `@nexus/mailer`. |
+| `configuration-service` | Gestion des serveurs, règles, jetons de gateway et journaux de requêtes; le transport mail partagé est disponible. |
+| `forwarding-service` | Serveur autonome basé sur `uWebSockets.js` : résolution du serveur, authentification par jeton, évaluation des règles, proxy et tunnels WebSocket; il n’utilise pas `@nexus/mailer`. |
 | Redis | Cache des applications NestJS via `@nexus/redis-cache`; le forwarding conserve son client autonome. Le fichier Docker Compose ne démarre que Redis. |
 | MariaDB | Base utilisée par Prisma et son adaptateur MariaDB. Elle doit être fournie séparément. |
 
@@ -55,13 +55,13 @@ Créer le fichier commun d’environnement à partir du modèle :
 if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
 ```
 
-Modifier `.env.global` et remplacer les valeurs d’exemple, notamment les identifiants MariaDB et `SHARED_JWT_SECRET`. Ne pas recopier le modèle par-dessus un fichier existant : `.env.global` contient les secrets locaux et est ignoré par Git. Sa configuration est lue depuis la racine du dépôt (`process.cwd()`); lancer les commandes npm depuis cette racine. Dans le clone de travail actuel, les réglages des cinq anciens fichiers `apps/*/.env` ont été transférés dans `.env.global`; ils ne sont pas inclus dans le dépôt. Sur un nouveau clone, créer le fichier à partir du modèle.
+Modifier `.env.global` et remplacer les valeurs d’exemple, notamment les identifiants MariaDB, les paramètres `SHARED_SMTP_*` et `SHARED_JWT_SECRET`. Ne pas recopier le modèle par-dessus un fichier existant : les fichiers d’environnement contiennent des secrets et sont ignorés par Git. En développement, la configuration charge `.env.global` (ou `.env` si ce fichier n’existe pas); pour les tests, elle sélectionne `.env.global.test` ou `.env.test`; en production, `.env.global.production`, `.env.prod` ou `.env.production`. La première option existante de chaque liste est choisie. `APP_ENV`, fourni au processus de l’extérieur du fichier chargé, prend priorité sur `NODE_ENV` pour le choix du mode. `.env.global.example` est un modèle, jamais chargé automatiquement. Les chemins sont résolus depuis la racine du dépôt (`process.cwd()`); lancer les commandes npm depuis cette racine.
 
-La librairie NestJS `@nexus/configuration` fournit `ConfigurationModule.forRoot('<service>')` et `ServiceConfiguration`. Elle ne permet à chaque service Nest d’accéder qu’aux clés de son propre préfixe et aux clés partagées `SHARED_*`. Le service de forwarding reste indépendant de NestJS et lit directement le même fichier avec `dotenv`.
+La librairie NestJS `@nexus/configuration` fournit `ConfigurationModule.forRoot('<service>')` et `ServiceConfiguration`. Elle ne permet à chaque service Nest d’accéder qu’aux clés de son propre préfixe et aux clés partagées `SHARED_*`. Le service de forwarding reste indépendant de NestJS et applique séparément la même sélection de fichier.
 
-La librairie `@nexus/redis-cache` est enregistrée par les applications Nest et injecte le `ServiceConfiguration` fourni par `@nexus/configuration`. Elle ne lit que les paramètres partagés `SHARED_REDIS_*`; les paramètres propres à l’application importatrice n’affectent pas le client Redis. Le forwarding garde son implémentation indépendante.
+Les librairies `@nexus/redis-cache` et `@nexus/mailer` sont enregistrées par les applications Nest et utilisent le `ServiceConfiguration` fourni par `@nexus/configuration`. Le client Redis ne lit que `SHARED_REDIS_*`; le transport SMTP ne lit que `SHARED_SMTP_*`. Les notifications et templates propres à auth et user restent dans leurs applications, sous `src/mail/notifications`; seul le transport Nodemailer est partagé. Le service configuration dispose du transport, sans nouveau flux de notification métier. Le forwarding garde ses implémentations indépendantes.
 
-Cette séparation est logique dans le code, pas une frontière de sécurité entre processus : tous les processus ayant accès au même `.env.global` peuvent lire les secrets qu’il contient. En production, injecter à chaque processus uniquement les secrets dont il a besoin.
+Cette séparation est logique dans le code, pas une frontière de sécurité entre processus : tous les processus ayant accès au même fichier d’environnement peuvent lire les secrets qu’il contient. En production, injecter à chaque processus uniquement les secrets dont il a besoin.
 
 ## Redis et base de données
 
@@ -77,7 +77,7 @@ Arrêter Redis :
 docker compose down
 ```
 
-`docker-compose.yaml` ne fournit ni MariaDB ni la base de données du projet. Configurer `SHARED_SERVICE_DATABASE_*` dans `.env.global` pour les services NestJS, ou adapter ces valeurs à votre installation. Ne pas lancer une commande de réinitialisation ou de migration sur une base contenant des données à conserver sans avoir d’abord vérifié son historique.
+`docker-compose.yaml` ne fournit ni MariaDB ni la base de données du projet. Configurer `SHARED_SERVICE_DATABASE_*` dans le fichier d’environnement actif pour les services NestJS, ou adapter ces valeurs à votre installation. Ne pas lancer une commande de réinitialisation ou de migration sur une base contenant des données à conserver sans avoir d’abord vérifié son historique.
 
 ## Prisma
 
@@ -117,7 +117,7 @@ npm run test:e2e
 npm run test:cov
 ```
 
-`npm run build` génère le client partagé, compile les librairies de configuration, Redis et base de données, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
+`npm run build` génère le client partagé, compile les librairies de configuration, Redis, base de données et mail, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
 
 ## API
 

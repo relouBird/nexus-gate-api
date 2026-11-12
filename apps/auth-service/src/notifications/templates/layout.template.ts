@@ -1,4 +1,4 @@
-// mail/templates/layout.template.ts
+// mail/notifications/templates/layout.template.ts
 import { C, FONT, SPACING, RADIUS } from './variable.template';
 
 // ─── Layout principal ─────────────────────────────────────────

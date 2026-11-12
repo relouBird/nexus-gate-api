@@ -1,4 +1,4 @@
-// mail/templates/variables.template.ts
+// mail/notifications/templates/variables.template.ts
 // ─── Palette & Design Tokens NexusGate ───────────────────────
 
 export const C = {

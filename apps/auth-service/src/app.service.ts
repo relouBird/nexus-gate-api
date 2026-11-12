@@ -10,7 +10,7 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { SendPasswordResetOtpDto } from './dto/send-password-reset-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { OtpService } from './otp/otp.service';
-import { NotificationsService } from './mail/notifications/notifications.service';
+import { NotificationsService } from './notifications/notifications.service';
 import { AuthContext } from './common/interfaces/auth-context.interface';
 import { DatabaseService } from '@nexus/database';
 import { RedisCacheService as RedisService } from '@nexus/redis-cache';

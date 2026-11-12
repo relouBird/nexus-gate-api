@@ -9,7 +9,7 @@ npm ci
 if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
 ```
 
-Modifier `.env.global` avec les ports, les accès MariaDB, Redis, SMTP et un secret JWT fort. Ne pas recopier le modèle par-dessus un fichier existant. `.env.global` est ignoré par Git; ne jamais y mettre de secret dans un commit. Les cinq fichiers locaux `apps/*/.env` ont été supprimés après migration de leurs réglages dans le `.env.global` local de ce clone. Un nouveau clone doit créer son propre fichier à partir du modèle.
+Modifier le fichier d’environnement correspondant au mode avec les ports, les accès MariaDB, Redis, SMTP et un secret JWT fort. En développement, `@nexus/configuration` charge `.env.global` (ou `.env`); en test, `.env.global.test` ou `.env.test`; en production, `.env.global.production`, `.env.prod` ou `.env.production`. La première option présente est choisie. `APP_ENV`, fourni au processus en dehors du fichier chargé, prime sur `NODE_ENV`. Tous ces fichiers réels sont ignorés par Git; ne jamais y mettre de secret dans un commit. `.env.global.example` sert de modèle, n’est pas chargé automatiquement, et ne doit pas être recopié par-dessus un fichier existant.
 
 ## Redis
 
@@ -32,7 +32,7 @@ npm run start:configuration-service
 npm run start:forwarding-service
 ```
 
-La librairie `@nexus/configuration` charge `.env.global` pour les services NestJS et leur fournit les variables de leur namespace (`API_GATEWAY_*`, `AUTH_SERVICE_*`, `USER_SERVICE_*` ou `CONFIGURATION_SERVICE_*`) ainsi que les variables partagées `SHARED_*`. `@nexus/redis-cache` réutilise `ServiceConfiguration` et ne lit que les paramètres partagés Redis. Le service de forwarding reste en Node.js autonome et lit le même fichier avec `dotenv`, sans dépendre des librairies Nest.
+La librairie `@nexus/configuration` choisit le fichier selon l’environnement et fournit aux services Nest leurs variables de namespace (`API_GATEWAY_*`, `AUTH_SERVICE_*`, `USER_SERVICE_*` ou `CONFIGURATION_SERVICE_*`) ainsi que les clés `SHARED_*`. `@nexus/redis-cache` ne lit que les paramètres partagés Redis; `@nexus/mailer` ne lit que `SHARED_SMTP_*`. Les notifications et templates auth/user demeurent propres à chaque service dans `src/mail/notifications`. Le service de forwarding reste en Node.js autonome et applique séparément la même sélection de fichier, sans dépendre des librairies Nest.
 
 ## Génération d’une librairie NestJS
 
@@ -77,4 +77,4 @@ npm test
 npm run test:e2e
 ```
 
-`npm run build` compile séquentiellement les librairies `configuration`, `redis-cache` et `database`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Il lance `prisma generate` avant le build Database. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.
+`npm run build` compile séquentiellement les librairies `configuration`, `redis-cache`, `database` et `mailer`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Il lance `prisma generate` avant le build Database. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.

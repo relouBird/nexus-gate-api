@@ -5,7 +5,7 @@ import { DatabaseModule } from '@nexus/database';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { UserModule } from './user/user.module';
-import { NotificationsModule } from './mail/notifications/notifications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { RedisCacheModule } from '@nexus/redis-cache';
 import {
   ConfigurationModule,

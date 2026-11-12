@@ -56,6 +56,15 @@
         "tsConfigPath": "libs/database/tsconfig.lib.json"
       }
     },
+    "mailer": {
+      "type": "library",
+      "root": "libs/mailer",
+      "entryFile": "index",
+      "sourceRoot": "libs/mailer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/mailer/tsconfig.lib.json"
+      }
+    },
     "redis-cache": {
       "type": "library",
       "root": "libs/redis-cache",
