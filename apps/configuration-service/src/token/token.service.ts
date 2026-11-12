@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from '../prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 import { randomBytes } from 'crypto';
 import {
   CreateGatewayTokenDto,
@@ -8,7 +8,7 @@ import {
   RemoveGatewayTokenDto,
 } from './token.dto';
 import { AccessPolicy, canUserAccess } from '../utils/policy.util';
-import { RedisService } from '../redis/redis.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 const DEFAULT_TTL = 30 * 24 * 60 * 60; // 30 jours en secondes
 
@@ -17,7 +17,7 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly redis: RedisService,
   ) {}
 

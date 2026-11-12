@@ -1,30 +1,32 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config/dist/config.module';
+import { DatabaseModule } from '@nexus/database';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './app.constants';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
-import { PrismaService } from './prisma/prisma.service';
-import { RedisModule } from './redis/redis.module';
+import { RedisCacheModule } from '@nexus/redis-cache';
+import { MailerModule } from '@nexus/mailer';
 import { ServerModule } from './server/server.module';
 import { RuleModule } from './rule/rule.module';
 import { TokenModule } from './token/token.module';
 import { RequestLogsModule } from './request-logs/request-logs.module';
+import {
+  ConfigurationModule,
+  ServiceConfiguration,
+} from '@nexus/configuration';
 
 @Module({
   imports: [
-    PrismaModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: 'apps/configuration-service/.env',
-    }),
+    DatabaseModule,
+    ConfigurationModule.forRoot('configuration-service'),
     PassportModule,
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '1d' }, // '60s', '15m','1h', '7d', etc.
+      inject: [ServiceConfiguration],
+      useFactory: (config: ServiceConfiguration) => ({
+        secret: config.getSharedOrThrow('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
     }),
     // Les modules métiers...
     ServerModule,
@@ -33,10 +35,10 @@ import { RequestLogsModule } from './request-logs/request-logs.module';
     RequestLogsModule,
 
     // Les utilitaires
-    RedisModule,
+    RedisCacheModule,
+    MailerModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
-  exports: [PrismaService],
+  providers: [AppService],
 })
-export class UserServiceModule {}
+export class ConfigurationServiceModule {}

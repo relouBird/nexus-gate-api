@@ -5,27 +5,34 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
-import { UserServiceModule } from './app.module';
+import {
+  loadGlobalEnvironment,
+  readServiceEnvironment,
+  readServiceEnvironmentNumber,
+} from '@nexus/configuration';
+import { ConfigurationServiceModule } from './app.module';
 import { printRpcPatterns } from './app.helper';
 
-// Chargement des variables d'environnement du service.
-dotenv.config({
-  path: path.resolve(__dirname, '../../configuration-service/.env'),
-  override: true,
-});
+loadGlobalEnvironment();
 
 async function bootstrap() {
-  const port = Number(process.env.PORT ?? 5552);
+  const host = readServiceEnvironment(
+    'configuration-service',
+    'TCP_HOST',
+    'localhost',
+  );
+  const port = readServiceEnvironmentNumber(
+    'configuration-service',
+    'TCP_PORT',
+    9005,
+  );
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    UserServiceModule,
+    ConfigurationServiceModule,
     {
       transport: Transport.TCP,
       options: {
-        host: 'localhost',
+        host,
         port,
       },
     },
@@ -56,9 +63,7 @@ async function bootstrap() {
 
   printRpcPatterns();
 
-  console.log(
-    `🚀 Configuration Service RPC listening on tcp://localhost:${port}`,
-  );
+  console.log(`🚀 Configuration Service RPC listening on tcp://${host}:${port}`);
 }
 
 bootstrap();

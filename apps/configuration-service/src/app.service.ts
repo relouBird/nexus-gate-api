@@ -1,17 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from './prisma/prisma.service';
 
-import * as bcrypt from 'bcrypt';
-
-import { RedisService } from './redis/redis.service';
+import { DatabaseService } from '@nexus/database';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly redis: RedisService,
   ) {}
 

@@ -1,24 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaService } from './prisma/prisma.service';
+import { DatabaseService } from '@nexus/database';
 
 import * as bcrypt from 'bcrypt';
 
-import { UserStatus } from './generated/prisma-client';
+import { UserStatus } from '@nexus/database/generated/prisma-client';
 import { GetMeDto } from './dto/get-me.dto';
 import { ChangeUsernameDto } from './dto/change-username.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserService } from './user/user.service';
 import { AuthContextDto } from './common/interfaces/auth-context.dto';
-import { NotificationsService } from './mail/notifications/notifications.service';
-import { RedisService } from './redis/redis.service';
+import { NotificationsService } from './notifications/notifications.service';
+import { RedisCacheService as RedisService } from '@nexus/redis-cache';
 
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly userService: UserService,
     private readonly redis: RedisService,
     private readonly notificationService: NotificationsService,

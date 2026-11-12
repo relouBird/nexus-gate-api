@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Otp, Prisma, User } from '../generated/prisma-client';
-import { PrismaService } from '../prisma/prisma.service';
 import { RpcException } from '@nestjs/microservices';
-import * as crypto from 'crypto';
+
+// Import PrismaClient to access the Otp and User models
+import { Otp, Prisma, User } from '@nexus/database/generated/prisma-client';
+import { DatabaseService } from '@nexus/database';
 
 const DEFAULT_OTP_TTL_SECONDS = 300;
 
@@ -11,7 +12,7 @@ export type ActionInGeneration = (data: User) => Promise<string>;
 @Injectable()
 export class OtpService {
   private readonly logger = new Logger(OtpService.name);
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: DatabaseService) {}
 
   async createOtp(data: Prisma.OtpCreateInput) {
     return this.prisma.otp.create({

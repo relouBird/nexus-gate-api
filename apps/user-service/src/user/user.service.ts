@@ -7,23 +7,23 @@ import {
   User,
   UserRole,
   UserStatus,
-} from '../generated/prisma-client';
-import { PrismaService } from '../prisma/prisma.service';
+} from '@nexus/database/generated/prisma-client';
+import { DatabaseService } from '@nexus/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
 import { AuthContextDto } from '../common/interfaces/auth-context.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { NotificationsService } from '../mail/notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  // Injection du PrismaService via le constructeur
+  // Injection du DatabaseService via le constructeur
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: DatabaseService,
     private readonly notificationService: NotificationsService,
   ) {}
 

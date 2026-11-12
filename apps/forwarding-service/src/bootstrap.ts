@@ -1,5 +1,3 @@
-import dotenv from 'dotenv';
-
 // Les infrastructures
 import { RedisService } from './infrastructure/redis.service';
 import { PrismaService } from './infrastructure/prisma.service';
@@ -26,8 +24,6 @@ import { buildContext } from './server/RequestParser';
 import { readBody } from './server/BodyParser';
 import { TunnelManager } from './tunnel/TunnelManager';
 import { createTunnelGateway } from './tunnel/TunnelGateway';
-
-dotenv.config();
 
 export async function bootstrap(server: Server) {
   const redis = new RedisService();

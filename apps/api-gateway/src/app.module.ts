@@ -3,9 +3,16 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerMiddleware } from './app.middleware';
 import { HttpModule } from '@nestjs/axios';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { MICROSERVICES_CLIENTS } from './app.constant';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+
+// Librairies externes
+import {
+  ConfigurationModule as SharedConfigurationModule,
+} from '@nexus/configuration';
+
+// Importation des modules liés aux microservices
+import { ClientsGatewayModule } from './clients-gateway/clients-gateway.module';
+
+// Les modules liés au fonctionnement de l'API Gateway
 import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { MeModule } from './me/me.module';
@@ -15,53 +22,13 @@ import { ConfigurationModule } from './configuration/configuration.module';
 @Module({
   imports: [
     HttpModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: 'apps/api-gateway/.env',
-    }),
-    ClientsModule.registerAsync({
-      clients: [
-        {
-          imports: [ConfigModule],
-          name: MICROSERVICES_CLIENTS.AUTH_SERVICE,
-          useFactory: (config: ConfigService) => ({
-            transport: Transport.TCP,
-            options: {
-              port: Number(config.get('AUTH_SERVICE_PORT')) ?? 9003,
-            },
-          }),
-          inject: [ConfigService],
-        },
-        {
-          imports: [ConfigModule],
-          name: MICROSERVICES_CLIENTS.USER_SERVICE,
-          useFactory: (config: ConfigService) => ({
-            transport: Transport.TCP,
-            options: {
-              port: Number(config.get('USER_SERVICE_PORT')) ?? 9004,
-            },
-          }),
-          inject: [ConfigService],
-        },
-        {
-          imports: [ConfigModule],
-          name: MICROSERVICES_CLIENTS.CONFIGURATION_SERVICE,
-          useFactory: (config: ConfigService) => ({
-            transport: Transport.TCP,
-            options: {
-              port: Number(config.get('CONFIGURATION_SERVICE_PORT')) ?? 9005,
-            },
-          }),
-          inject: [ConfigService],
-        },
-      ],
-      isGlobal: true,
-    }),
+    SharedConfigurationModule.forRoot('api-gateway'),
     AuthModule,
     TeamModule,
     MeModule,
     UserModule,
     ConfigurationModule,
+    ClientsGatewayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

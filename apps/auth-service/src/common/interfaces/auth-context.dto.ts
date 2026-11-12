@@ -7,7 +7,9 @@ import {
   IsOptional,
   IsNumber,
 } from 'class-validator';
-import { UserRole } from '../../generated/prisma-client';
+
+// Import PrismaClient to access the UserRole enum
+import { UserRole } from '@nexus/database/generated/prisma-client';
 
 export class AuthContextDto {
   /**

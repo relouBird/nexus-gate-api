@@ -1,5 +1,4 @@
 // infrastructure/RedisService.ts
-import 'dotenv/config';
 import Redis, { type RedisOptions } from 'ioredis';
 
 export class RedisUnavailableError extends Error {
@@ -15,8 +14,12 @@ export class RedisService {
   private connected = false;
 
   constructor(options: RedisOptions = {}) {
-    const port = Number(process.env.REDIS_PORT) || 2000;
-    const host = process.env.REDIS_HOST || 'localhost';
+    const port = Number(process.env.SHARED_REDIS_PORT ?? 6379);
+    const host = process.env.SHARED_REDIS_HOST || 'localhost';
+    const password = process.env.SHARED_REDIS_PASSWORD || undefined;
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new Error('SHARED_REDIS_PORT must be a valid TCP port');
+    }
     console.log('[Redis] initializing with options:', {
       port,
       host,
@@ -25,7 +28,7 @@ export class RedisService {
     this.client = new Redis({
       port,
       host,
-      password: '',
+      password,
       db: 0,
       maxRetriesPerRequest: 3,
       retryStrategy: (times) => Math.min(times * 200, 2000), // backoff progressif, plafonné à 2s

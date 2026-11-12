@@ -1,284 +1,80 @@
-# COMMAND LIST
+# Aide-mémoire des commandes
 
-## Présentation
+Toutes les commandes npm s’exécutent depuis la racine du dépôt. Voir le [README](./README.md) et [PROJECT-STATUS.md](./PROJECT-STATUS.md) pour l’architecture et les limites connues.
 
-**Nexus Gate API** est une architecture backend basée sur **NestJS Microservices**.
+## Installation et environnement
 
-Le projet est composé de plusieurs services indépendants qui communiquent entre eux via le système de microservices NestJS.
-
----
-
-# Architecture des services
-
-| Service           | Description                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------- |
-| `api-gateway`     | Point d'entrée principal de l'application. Toutes les requêtes HTTP transitent par ce service. |
-| `auth-service`    | Gestion de l'authentification, des utilisateurs, des équipes, des sessions et des OTP.         |
-| `network-service` | Gestion des serveurs enregistrés et de leur configuration réseau.                              |
-| `forward-service` | Gestion du transfert des ressources et des communications entre services.                      |
-| `redis`           | Cache partagé utilisé par les microservices.                                                   |
-
----
-
-# Prérequis
-
-Avant de démarrer le projet, assurez-vous d'avoir installé :
-
-- Node.js 22+
-- Docker Desktop
-- MariaDB / MySQL
-- NestJS CLI
-
-Vérification :
-
-```bash
-node -v
-npm -v
-docker -v
-nest --version
+```powershell
+npm ci
+if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
 ```
 
----
+Modifier le fichier d’environnement correspondant au mode avec les ports, les accès MariaDB, Redis, SMTP et un secret JWT fort. En développement, `@nexus/configuration` charge `.env.global` (ou `.env`); en test, `.env.global.test` ou `.env.test`; en production, `.env.global.production`, `.env.prod` ou `.env.production`. La première option présente est choisie. `APP_ENV`, fourni au processus en dehors du fichier chargé, prime sur `NODE_ENV`. Tous ces fichiers réels sont ignorés par Git; ne jamais y mettre de secret dans un commit. `.env.global.example` sert de modèle, n’est pas chargé automatiquement, et ne doit pas être recopié par-dessus un fichier existant.
 
-# Installation des dépendances
+## Redis
 
-À la racine du projet :
-
-```bash
-npm install
-```
-
----
-
-# Génération du client Prisma
-
-Service Auth :
-
-```bash
-npm run db:auth:generate
-```
-
----
-
-# Migrations Prisma
-
-Créer ou appliquer les migrations :
-
-```bash
-npm run db:auth:migrate
-```
-
-Réinitialiser la base de données :
-
-```bash
-npm run db:auth:reset
-```
-
-Ouvrir Prisma Studio :
-
-```bash
-npm run db:auth:studio
-```
-
----
-
-# Démarrage de Redis
-
-Le cache Redis est obligatoire pour certaines fonctionnalités du projet.
-
-## Démarrer Redis avec Docker
-
-Depuis la racine du projet :
-
-```bash
+```powershell
 docker compose up -d
-```
-
-Vérifier que Redis est bien démarré :
-
-```bash
-docker ps
-```
-
-Vous devriez obtenir quelque chose de similaire :
-
-```text
-nexus-redis
-0.0.0.0:6379->6379/tcp
-```
-
-Tester Redis :
-
-```bash
-docker exec -it nexus-redis redis-cli ping
-```
-
-Résultat attendu :
-
-```text
-PONG
-```
-
----
-
-## Arret de Redis
-
-Depuis la racine du projet :
-
-```bash
 docker compose down
 ```
 
----
+Le fichier Compose démarre Redis, pas MariaDB.
 
-# Variables d'environnement
+## Services en développement
 
-Chaque microservice possède son propre fichier `.env`.
+Ouvrir un terminal par processus :
 
-Exemple :
-
-## api-gateway/.env
-
-```env
-PORT=9002
-AUTH_SERVICE_PORT=9003
-```
-
-## auth-service/.env
-
-```env
-DATABASE_URL=mysql://root@localhost:3306/nexus_gate_database
-
-DATABASE_HOST=localhost
-DATABASE_PORT=3306
-DATABASE_NAME=nexus_gate_database
-DATABASE_USER=root
-DATABASE_PASSWORD=
-
-PORT=9003
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-```
-
----
-
-# Démarrage des services
-
-## 1. Démarrer le Gateway
-
-Ouvrir un terminal :
-
-```bash
+```powershell
 npm run start:gateway
-```
-
-Le service sera accessible sur :
-
-```text
-http://localhost:9002
-```
-
----
-
-## 2. Démarrer le Service d'Authentification
-
-Ouvrir un second terminal :
-
-```bash
 npm run start:auth-service
+npm run start:user-service
+npm run start:configuration-service
+npm run start:forwarding-service
 ```
 
-Le microservice démarrera sur :
+La librairie `@nexus/configuration` choisit le fichier selon l’environnement et fournit aux services Nest leurs variables de namespace (`API_GATEWAY_*`, `AUTH_SERVICE_*`, `USER_SERVICE_*` ou `CONFIGURATION_SERVICE_*`) ainsi que les clés `SHARED_*`. `@nexus/redis-cache` ne lit que les paramètres partagés Redis; `@nexus/mailer` ne lit que `SHARED_SMTP_*`. Les notifications et templates auth/user demeurent propres à chaque service dans `src/mail/notifications`. Le service de forwarding reste en Node.js autonome et applique séparément la même sélection de fichier, sans dépendre des librairies Nest.
 
-```text
-localhost:9003
+## Génération d’une librairie NestJS
+
+Le Nest CLI est local au projet. Pour générer une nouvelle librairie depuis un terminal interactif :
+
+```powershell
+npx nest g library <nom>
 ```
 
----
+Choisir le préfixe `@nexus` lorsque le CLI le demande. Les commandes de build correspondantes sont `npx nest build <nom-du-projet>`.
 
-# Démarrage manuel
+## Base de données Prisma
 
-Il est également possible d'utiliser les commandes NestJS standards :
+Base partagée des applications NestJS :
 
-```bash
-nest start --watch api-gateway
+```powershell
+npm run db:services:generate
+npm run db:services:format
+npm run db:services:migrate
+npm run db:services:studio
 ```
 
-```bash
-nest start --watch auth-service
+Commandes séparées pour la base du forwarding :
+
+```powershell
+npm run db:forwarding:generate
+npm run db:forwarding:format
+npm run db:forwarding:migrate
+npm run db:forwarding:studio
 ```
 
----
+Les services NestJS utilisent `SHARED_SERVICE_DATABASE_*` et `libs/database/prisma/schema.prisma`. Le build de la librairie Database régénère le client Prisma ignoré par Git. `db:services:reset` et `db:forwarding:reset` sont destructives; vérifier les bases ciblées avant de les lancer. Le script `db:forwarding:generate-copy` référence `apps/forwarding-service/prisma.copy.ts`, absent du dépôt.
 
-# Build de production
+## Build et tests
 
-Compiler tous les services :
-
-```bash
+```powershell
 npm run build
-```
-
----
-
-# Lancement en production
-
-```bash
-npm run start:prod
-```
-
----
-
-# Tests
-
-Exécuter tous les tests :
-
-```bash
+npx tsc -p apps/forwarding-service/tsconfig.json
+npx nest build configuration
+npx jest libs/configuration/src/configuration.service.spec.ts --runInBand
 npm test
-```
-
-Mode watch :
-
-```bash
-npm run test:watch
-```
-
-Coverage :
-
-```bash
-npm run test:cov
-```
-
-Tests End-to-End :
-
-```bash
 npm run test:e2e
 ```
 
----
-
-# Ordre de démarrage recommandé
-
-Toujours démarrer les services dans l'ordre suivant :
-
-1. MariaDB / MySQL
-2. Redis
-3. Auth Service
-4. Network Service
-5. Forward Service
-6. API Gateway
-
----
-
-# Vérification du fonctionnement
-
-Une fois tous les services démarrés :
-
-```bash
-GET http://localhost:9002/api
-```
-
-ou toute autre route exposée par le Gateway.
-
-Le Gateway se chargera automatiquement de communiquer avec les microservices concernés.
+`npm run build` compile séquentiellement les librairies `configuration`, `redis-cache`, `database` et `mailer`, puis les quatre applications NestJS, avec leurs sorties sous `dist/libs` et `dist/apps`. Il lance `prisma generate` avant le build Database. Le forwarding reste hors de cette commande et utilise son `tsconfig` autonome; son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Pour compiler une seule application ou librairie Nest, utiliser `npx nest build <nom>`; `test:e2e` ne couvre que l’API gateway.

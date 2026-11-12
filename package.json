@@ -6,7 +6,17 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "npm run build:lib:all && npm run build:app:all",
+    "build:lib:all": "npm run build:lib:configuration && npm run build:lib:redis-cache && npm run build:lib:database && npm run build:lib:mailer",
+    "build:lib:configuration": "nest build configuration",
+    "build:lib:database": "npm run db:services:generate && nest build database",
+    "build:lib:redis-cache": "nest build redis-cache",
+    "build:lib:mailer": "nest build mailer",
+    "build:app:all": "nest build api-gateway && nest build auth-service && nest build user-service && nest build configuration-service",
+    "build:app:api-gateway": "nest build api-gateway",
+    "build:app:auth-service": "nest build auth-service",
+    "build:app:user-service": "nest build user-service",
+    "build:app:configuration-service": "nest build configuration-service",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -17,21 +27,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
-    "db:auth:generate": "prisma generate --config apps/auth-service/prisma.config.ts",
-    "db:auth:format": "prisma format --schema=apps/auth-service/prisma/schema.prisma",
-    "db:auth:studio": "prisma studio --config apps/auth-service/prisma.config.ts",
-    "db:auth:migrate": "prisma migrate dev --name init --config apps/auth-service/prisma.config.ts",
-    "db:auth:reset": "prisma migrate reset --config apps/auth-service/prisma.config.ts",
-    "db:user:generate": "prisma generate --config apps/user-service/prisma.config.ts",
-    "db:user:format": "prisma format --schema=apps/user-service/prisma/schema.prisma",
-    "db:user:studio": "prisma studio --config apps/user-service/prisma.config.ts",
-    "db:user:migrate": "prisma migrate dev --name init --config apps/user-service/prisma.config.ts",
-    "db:user:reset": "prisma migrate reset --config apps/user-service/prisma.config.ts",
-    "db:configuration:generate": "prisma generate --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:format": "prisma format --schema=apps/configuration-service/prisma/schema.prisma",
-    "db:configuration:studio": "prisma studio --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:migrate": "prisma migrate dev --name init --config apps/configuration-service/prisma.config.ts",
-    "db:configuration:reset": "prisma migrate reset --config apps/configuration-service/prisma.config.ts",
+    "db:services:generate": "prisma generate --config libs/database/prisma.config.ts",
+    "db:services:format": "prisma format --schema=libs/database/prisma/schema.prisma",
+    "db:services:studio": "prisma studio --config libs/database/prisma.config.ts",
+    "db:services:migrate": "prisma migrate dev --name init --config libs/database/prisma.config.ts",
+    "db:services:reset": "prisma migrate reset --config libs/database/prisma.config.ts",
     "db:forwarding:generate": "prisma generate --config apps/forwarding-service/prisma.config.ts",
     "db:forwarding:generate-copy": "node apps/forwarding-service/prisma.copy.ts",
     "db:forwarding:format": "prisma format --schema=apps/forwarding-service/prisma/schema.prisma",
@@ -59,6 +59,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "dotenv": "^18.0.10",
     "geoip-country": "^5.0.202607010001",
     "ioredis": "^5.11.1",
     "nodemailer": "^9.0.1",
@@ -84,7 +85,6 @@
     "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^7.0.0",
     "concurrently": "^10.0.3",
-    "dotenv": "^17.4.2",
     "globals": "^17.0.0",
     "jest": "^30.0.0",
     "nodemon": "^3.1.14",
@@ -115,7 +115,14 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/"
-    ]
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
+    "moduleNameMapper": {
+      "^@nexus/configuration(|/.*)$": "<rootDir>/libs/configuration/src/$1",
+      "^@nexus/redis-cache(|/.*)$": "<rootDir>/libs/redis-cache/src/$1",
+      "^@nexus/database(|/.*)$": "<rootDir>/libs/database/src/$1",
+      "^@nexus/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1"
+    }
   }
 }

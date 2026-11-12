@@ -1,98 +1,129 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Nexus Gate API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Nexus Gate est un backend en cours de développement pour gérer des équipes, des utilisateurs et des serveurs, puis acheminer des requêtes vers ces serveurs. Le dépôt regroupe une API HTTP, des microservices NestJS et un service de forwarding autonome.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> **État du projet :** la configuration NestJS est centralisée dans `@nexus/configuration`; les services Nest partagent les clients Redis et SMTP de `@nexus/redis-cache` et `@nexus/mailer`. Le forwarding reste autonome. Les réserves de déploiement, notamment autour du forwarding et de Prisma, sont listées dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
-## Description
+## Architecture
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Composant | Rôle observé |
+| --- | --- |
+| `api-gateway` | API HTTP NestJS, documentation Swagger, authentification et routage des requêtes vers les microservices TCP. |
+| `auth-service` | Authentification, équipes, sessions, OTP et notifications par courriel via `@nexus/mailer`. |
+| `user-service` | Gestion des utilisateurs et du profil courant; notifications par courriel via `@nexus/mailer`. |
+| `configuration-service` | Gestion des serveurs, règles, jetons de gateway et journaux de requêtes; le transport mail partagé est disponible. |
+| `forwarding-service` | Serveur autonome basé sur `uWebSockets.js` : résolution du serveur, authentification par jeton, évaluation des règles, proxy et tunnels WebSocket; il n’utilise pas `@nexus/mailer`. |
+| Redis | Cache des applications NestJS via `@nexus/redis-cache`; le forwarding conserve son client autonome. Le fichier Docker Compose ne démarre que Redis. |
+| MariaDB | Base utilisée par Prisma et son adaptateur MariaDB. Elle doit être fournie séparément. |
 
-## Project setup
+Les quatre services NestJS et le service de forwarding ne suivent pas tous le même mode de démarrage. Le forwarding est compilé avec son propre `tsconfig.json` et ne figure pas comme projet dans [nest-cli.json](./nest-cli.json).
 
-```bash
-$ npm install
+## Structure
+
+```text
+apps/
+  api-gateway/
+  auth-service/
+  user-service/
+  configuration-service/
+  forwarding-service/
+docker-compose.yaml
+package.json
 ```
 
-## Compile and run the project
+Les applications NestJS partagent le schéma et les migrations Prisma de `libs/database`. Le forwarding reste autonome et conserve son propre `apps/forwarding-service/prisma/schema.prisma`; son intégration à la librairie partagée n’est pas encore reproductible depuis un clone propre.
+
+## Prérequis
+
+- Node.js et npm compatibles avec les versions des dépendances déclarées dans [package.json](./package.json).
+- MariaDB accessible depuis les services qui utilisent Prisma.
+- Docker Desktop si Redis est lancé avec Docker Compose.
+
+Le NestJS CLI est installé comme dépendance du projet; une installation globale n’est pas nécessaire.
+
+## Installation
+
+Depuis la racine du dépôt :
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm ci
 ```
 
-## Run tests
+Créer le fichier commun d’environnement à partir du modèle :
+
+```powershell
+if (-not (Test-Path .env.global)) { Copy-Item .env.global.example .env.global }
+```
+
+Modifier `.env.global` et remplacer les valeurs d’exemple, notamment les identifiants MariaDB, les paramètres `SHARED_SMTP_*` et `SHARED_JWT_SECRET`. Ne pas recopier le modèle par-dessus un fichier existant : les fichiers d’environnement contiennent des secrets et sont ignorés par Git. En développement, la configuration charge `.env.global` (ou `.env` si ce fichier n’existe pas); pour les tests, elle sélectionne `.env.global.test` ou `.env.test`; en production, `.env.global.production`, `.env.prod` ou `.env.production`. La première option existante de chaque liste est choisie. `APP_ENV`, fourni au processus de l’extérieur du fichier chargé, prend priorité sur `NODE_ENV` pour le choix du mode. `.env.global.example` est un modèle, jamais chargé automatiquement. Les chemins sont résolus depuis la racine du dépôt (`process.cwd()`); lancer les commandes npm depuis cette racine.
+
+La librairie NestJS `@nexus/configuration` fournit `ConfigurationModule.forRoot('<service>')` et `ServiceConfiguration`. Elle ne permet à chaque service Nest d’accéder qu’aux clés de son propre préfixe et aux clés partagées `SHARED_*`. Le service de forwarding reste indépendant de NestJS et applique séparément la même sélection de fichier.
+
+Les librairies `@nexus/redis-cache` et `@nexus/mailer` sont enregistrées par les applications Nest et utilisent le `ServiceConfiguration` fourni par `@nexus/configuration`. Le client Redis ne lit que `SHARED_REDIS_*`; le transport SMTP ne lit que `SHARED_SMTP_*`. Les notifications et templates propres à auth et user restent dans leurs applications, sous `src/mail/notifications`; seul le transport Nodemailer est partagé. Le service configuration dispose du transport, sans nouveau flux de notification métier. Le forwarding garde ses implémentations indépendantes.
+
+Cette séparation est logique dans le code, pas une frontière de sécurité entre processus : tous les processus ayant accès au même fichier d’environnement peuvent lire les secrets qu’il contient. En production, injecter à chaque processus uniquement les secrets dont il a besoin.
+
+## Redis et base de données
+
+Démarrer Redis :
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Arrêter Redis :
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose down
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+`docker-compose.yaml` ne fournit ni MariaDB ni la base de données du projet. Configurer `SHARED_SERVICE_DATABASE_*` dans le fichier d’environnement actif pour les services NestJS, ou adapter ces valeurs à votre installation. Ne pas lancer une commande de réinitialisation ou de migration sur une base contenant des données à conserver sans avoir d’abord vérifié son historique.
 
-## Resources
+## Prisma
 
-Check out a few resources that may come in handy when working with NestJS:
+Les services NestJS utilisent le schéma centralisé de `libs/database` :
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run db:services:generate
+npm run db:services:format
+npm run db:services:migrate
+npm run db:services:studio
+```
 
-## Support
+`npm run build` génère d’abord le client Prisma partagé puis compile la librairie. Les commandes `db:services:reset` réinitialisent la base partagée et peuvent supprimer ses données. Les commandes `db:forwarding:*` restent séparées.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Le client Prisma partagé est généré dans `libs/database/src/generated`, dossier ignoré par Git. Il est régénéré par le build; après une modification manuelle du schéma, il peut aussi être généré avec `npm run db:services:generate`. L’import utilisé par le forwarding dépend encore d’un package local non versionné; voir [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
-## Stay in touch
+## Démarrage et scripts utiles
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Scripts de développement déclarés dans `package.json` :
 
-## License
+```bash
+npm run start:gateway
+npm run start:auth-service
+npm run start:user-service
+npm run start:configuration-service
+npm run start:forwarding-service
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Chaque processus se lance séparément. Les scripts ne garantissent pas à eux seuls une configuration fonctionnelle : vérifier les variables d’environnement et les réserves de démarrage avant de les lancer.
+
+Autres commandes :
+
+```bash
+npm run build
+npm test
+npm run test:e2e
+npm run test:cov
+```
+
+`npm run build` génère le client partagé, compile les librairies de configuration, Redis, base de données et mail, puis les quatre applications NestJS. Le service de forwarding reste volontairement indépendant : il n’est pas inclus dans ce build et se compile avec `npx tsc -p apps/forwarding-service/tsconfig.json`. Son build peut nécessiter le package Prisma local décrit dans [PROJECT-STATUS.md](./PROJECT-STATUS.md). Le script `test:e2e` utilise la configuration du gateway uniquement.
+
+## API
+
+La gateway applique le préfixe global `/api` et configure Swagger à l’adresse prévue `/api/docs`. Les contrôleurs exposent notamment des routes d’authentification, de gestion des équipes et utilisateurs, ainsi que de configuration des serveurs, règles, jetons et journaux. Le port HTTP effectivement utilisé dépend toutefois de la configuration actuelle de `apps/api-gateway/src/main.ts`; voir les points à corriger dans [PROJECT-STATUS.md](./PROJECT-STATUS.md).
+
+## Documentation complémentaire
+
+- [READCOMMAND.md](./READCOMMAND.md) — aide-mémoire des commandes présentes dans `package.json`.
+- [PROJECT-STATUS.md](./PROJECT-STATUS.md) — constats vérifiés et réserves techniques restantes.
